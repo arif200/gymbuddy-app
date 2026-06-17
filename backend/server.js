@@ -4,7 +4,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import { rateLimit } from 'express-rate-limit'
 import dotenv from 'dotenv'
-import {connectDB} from './src/config/db.js'
+import {connectDB, isDBConnected} from './src/config/db.js'
 
 import authRoutes from './src/routes/auth.routes.js'
 import userRoutes from './src/routes/user.routes.js'
@@ -100,7 +100,12 @@ app.use('/api/banners', bannersRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ success: true, message: 'GymBuddy API berjalan', timestamp: new Date().toISOString() })
+    res.json({
+        success: true,
+        message: 'GymBuddy API berjalan',
+        database: isDBConnected() ? 'connected' : 'disconnected',
+        timestamp: new Date().toISOString()
+    })
 })
 
 // Error handling
@@ -111,7 +116,9 @@ app.use((req, res) => {
     res.status(404).json({ success: false, message: 'Endpoint tidak ditemukan' })
 })
 
-connectDB()
-
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`GymBuddy API berjalan di port ${PORT}`))
+app.listen(PORT, () => {
+    console.log(`GymBuddy API berjalan di port ${PORT}`)
+    // Coba konek database (gagal gak apa, server tetap jalan)
+    connectDB()
+})

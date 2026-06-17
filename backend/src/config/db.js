@@ -18,21 +18,30 @@ console.log('[DB] Connecting to MySQL:', config.host + ':' + config.port + '/' +
 
 const pool = mariadb.createPool(config);
 
-const dbCheck = async () => {
-    try {
-        const connection = await pool.getConnection();
-        await connection.query('SELECT 1');
-        connection.release();
-        console.log('Database connected successfully');
-    } catch (error) {
-        console.error('Database connection failed:', error);
-        process.exit(1);
-    }
-}
+let dbConnected = false;
 
-export const connectDB = () => {
-    console.log('[Config] connectDB called');
-    return dbCheck();
+export const isDBConnected = () => dbConnected;
+
+export const connectDB = async (retries = 10, delay = 5000) => {
+    console.log('[DB] Connecting to database...');
+    for (let i = 0; i < retries; i++) {
+        try {
+            const connection = await pool.getConnection();
+            await connection.query('SELECT 1');
+            connection.release();
+            dbConnected = true;
+            console.log('Database connected successfully');
+            return true;
+        } catch (error) {
+            console.log('[DB] Connection attempt ' + (i + 1) + '/' + retries + ' failed:', error.message);
+            if (i < retries - 1) {
+                console.log('[DB] Retrying in ' + (delay / 1000) + ' seconds...');
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    console.error('[DB] All connection attempts failed. Server will run without database.');
+    return false;
 };
 
 export const getDBPool = () => {
