@@ -4,7 +4,7 @@ import helmet from 'helmet'
 import compression from 'compression'
 import { rateLimit } from 'express-rate-limit'
 import dotenv from 'dotenv'
-import {connectDB, isDBConnected} from './src/config/db.js'
+import {connectDB, isDBConnected, getLastDbError} from './src/config/db.js'
 
 import authRoutes from './src/routes/auth.routes.js'
 import userRoutes from './src/routes/user.routes.js'
@@ -104,10 +104,10 @@ app.get('/api/health', (req, res) => {
         success: true,
         message: 'GymBuddy API berjalan',
         database: isDBConnected() ? 'connected' : 'disconnected',
+        db_error: isDBConnected() ? null : getLastDbError(),
         db_host: process.env.DB_HOST || process.env.MYSQLHOST || 'not_set',
         db_port: process.env.DB_PORT || process.env.MYSQLPORT || 'not_set',
         db_ssl: process.env.DB_SSL || 'false',
-        node_env: process.env.NODE_ENV || 'not_set',
         timestamp: new Date().toISOString()
     })
 })

@@ -19,8 +19,10 @@ console.log('[DB] Connecting to MySQL:', config.host + ':' + config.port + '/' +
 const pool = mariadb.createPool(config);
 
 let dbConnected = false;
+let lastDbError = null;
 
 export const isDBConnected = () => dbConnected;
+export const getLastDbError = () => lastDbError;
 
 export const connectDB = async () => {
     await attemptConnection();
@@ -37,7 +39,8 @@ async function attemptConnection(retries = 10, delay = 5000) {
             console.log('Database connected successfully');
             return;
         } catch (error) {
-            console.log('[DB] Attempt ' + (i + 1) + '/' + retries + ' failed:', error.message, error.stack || '');
+            lastDbError = error.message;
+            console.log('[DB] Attempt ' + (i + 1) + '/' + retries + ' failed:', error.message);
             if (i < retries - 1) {
                 console.log('[DB] Retrying in ' + (delay / 1000) + 's...');
                 await new Promise(resolve => setTimeout(resolve, delay));
