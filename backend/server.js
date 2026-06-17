@@ -104,6 +104,10 @@ app.get('/api/health', (req, res) => {
         success: true,
         message: 'GymBuddy API berjalan',
         database: isDBConnected() ? 'connected' : 'disconnected',
+        db_host: process.env.DB_HOST || process.env.MYSQLHOST || 'not_set',
+        db_port: process.env.DB_PORT || process.env.MYSQLPORT || 'not_set',
+        db_ssl: process.env.DB_SSL || 'false',
+        node_env: process.env.NODE_ENV || 'not_set',
         timestamp: new Date().toISOString()
     })
 })
