@@ -52,18 +52,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final uri = Uri.parse(_paymentUrl!);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      if (!mounted) return;
+      // Refresh booking status from backend
+      await _api.getPaymentStatus(widget.bookingId);
+      if (!mounted) return;
       // After returning from in-app payment page, check payment status
-      if (mounted) {
-        // Refresh booking status from backend
-        await _api.getPaymentStatus(widget.bookingId);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pembayaran diproses. Silakan cek status booking Anda.'),
-            backgroundColor: Colors.blue,
-          ),
-        );
-        setState(() => _paymentDone = true);
-      }
+      _paymentDone = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pembayaran diproses. Silakan cek status booking Anda.'),
+          backgroundColor: Colors.blue,
+        ),
+      );
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

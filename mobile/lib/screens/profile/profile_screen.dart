@@ -343,7 +343,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Mengupload foto...'), backgroundColor: Colors.blue),

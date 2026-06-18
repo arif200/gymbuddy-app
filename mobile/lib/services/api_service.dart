@@ -262,8 +262,10 @@ class ApiService {
   // ==================== FAQ ====================
   Future<Map<String, dynamic>> getFaq({String? kategori}) async {
     try {
-      final params = <String, dynamic>{};
-      if (kategori != null) params['kategori'] = kategori;
+      // ignore: use_null_aware_elements
+      final params = <String, dynamic>{
+        if (kategori != null) 'kategori': kategori,
+      };
       final res = await _dio.get('/faq', queryParameters: params);
       return res.data;
     } catch (e) {
@@ -354,7 +356,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> adminGetBookings({String? status}) async {
     try {
-      final res = await _dio.get('/bookings', queryParameters: {
+      final res = await _dio.get('/bookings', queryParameters: <String, dynamic>{
+        // ignore: use_null_aware_elements
         if (status != null) 'status': status,
       });
       return res.data;
