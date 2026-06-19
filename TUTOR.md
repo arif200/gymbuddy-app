@@ -114,6 +114,9 @@ MIDTRANS_CLIENT_KEY=Mid-client-your-key
 MIDTRANS_IS_PRODUCTION=false
 
 FRONTEND_URL=http://localhost:5173
+
+# Untuk production:
+# FRONTEND_URL=https://frontend-three-bay-49.vercel.app
 ```
 
 Jalankan backend:
@@ -467,7 +470,7 @@ git push origin main
 
 1. **Trainer photos null untuk data lama** — Booking lama tidak punya foto trainer karena field `trainer_photo` baru ditambahkan. Booking baru akan punya foto jika trainer upload foto profil.
 2. **Pricing page** — Route di `/dashboard/pricingview` (bukan `/pricing`).
-3. **Domain** — Akses via **Vercel URL**: `https://frontend-three-bay-49.vercel.app` (domain `gymbuddy.site` masih menunggu update DNS)
+3. **Domain** — Akses via **Vercel URL**: `https://frontend-three-bay-49.vercel.app`
 
 ---
 
