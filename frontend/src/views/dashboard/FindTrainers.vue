@@ -10,7 +10,7 @@
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        <input v-model="searchQuery" type="text" placeholder="Cari trainer atau judul sesi..." 
+        <input v-model="searchQuery" type="search" aria-label="Cari trainer atau sesi" placeholder="Cari trainer atau judul sesi..." 
                class="w-full bg-[#0f1115] border border-gray-800 p-4 rounded-2xl text-sm focus:ring-2 focus:ring-red-500 outline-none text-white">
       </div>
 
