@@ -25,7 +25,7 @@ AuthState createTestAuthState({
 
 /// Simple notifier that extends AuthNotifier with no-op API methods
 class TestAuthNotifier extends AuthNotifier {
-  TestAuthNotifier(AuthState state) : super.test(state);
+  TestAuthNotifier(super.state) : super.test();
 
   @override
   Future<void> logout() async {
