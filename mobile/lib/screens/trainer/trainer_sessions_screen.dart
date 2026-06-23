@@ -67,6 +67,7 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
       setState(() => _loading = true);
       try {
         final res = await _api.deleteSession(id);
+        if (!mounted) return;
         if (res['success'] != false) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Sesi berhasil dihapus'), backgroundColor: Colors.green),
@@ -77,6 +78,7 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
           );
         }
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Koneksi bermasalah'), backgroundColor: Colors.red),
         );
@@ -212,6 +214,7 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
                         res = await _api.createSession(payload);
                       }
                       
+                      if (!context.mounted) return;
                       if (res['success'] != false) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(isEdit ? 'Sesi diperbarui!' : 'Sesi ditambahkan!'), backgroundColor: Colors.green[700]),
@@ -222,6 +225,7 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
                         );
                       }
                     } catch (e) {
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Koneksi bermasalah'), backgroundColor: Colors.red),
                       );
