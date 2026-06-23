@@ -4,7 +4,7 @@ import axios from 'axios'
 // Base URL: prioritaskan environment variable, lalu fallback ke production URL
 const API_BASE_URL = import.meta.env.VITE_API_URL
   || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000/api/v1'
-  : 'https://gymbuddy-api-production-81df.up.railway.app/api/v1')
+  : 'https://api.gymbuddy.site/api/v1')
 
 
 const api = axios.create({
