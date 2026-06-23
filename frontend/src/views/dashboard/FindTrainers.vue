@@ -78,7 +78,7 @@
                     : 'bg-red-500 text-black hover:bg-red-400 shadow-lg shadow-red-500/20'"
                   class="w-full py-4 font-black uppercase text-xs tracking-widest rounded-2xl transition-all">
             <span v-if="loadingBooking">Memproses...</span>
-            <span v-else-if="isBooked(session.id)">Booked ✓</span>
+            <span v-else-if="isBooked(session.id)">Sudah Dibooking ✓</span>
             <span v-else>Ambil Sesi →</span>
           </button>
         </div>

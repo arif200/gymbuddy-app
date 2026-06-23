@@ -174,3 +174,13 @@ export async function countConfirmedBookings(sessionId: number) {
     .where(and(eq(bookings.session_id, sessionId), eq(bookings.status, 'confirmed')));
     return Number(result[0].count);
 }
+
+export async function deleteByMember(memberId: number) {
+    const result = await db.delete(bookings).where(eq(bookings.member_id, memberId)).returning({ id: bookings.id });
+    return result.length;
+}
+
+export async function deleteAll() {
+    const result = await db.delete(bookings).returning({ id: bookings.id });
+    return result.length;
+}

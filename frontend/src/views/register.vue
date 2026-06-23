@@ -37,7 +37,7 @@
             </div>
 
             <div class="space-y-2">
-              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Email Address</label>
+              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Alamat Email</label>
               <input v-model="formData.email" type="email" autocomplete="email" placeholder="nama@email.com"
                      :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 outline-none transition-all placeholder-gray-700', errors.email ? 'ring-2 ring-red-500' : 'focus:ring-red-500']">
               <p v-if="errors.email" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.email }}</p>

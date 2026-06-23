@@ -9,6 +9,8 @@ import {
     getMyBookings,
     createBooking,
     updateBookingStatus,
+    resetMyBookings,
+    resetAllBookings,
     BookingError,
 } from './booking.service';
 
@@ -30,6 +32,14 @@ export function createBookingController(req: ValidatedRequest & AuthedRequest, r
 
 export function updateBookingStatusController(req: ValidatedRequest & AuthedRequest, res: Response, _next: NextFunction) {
     handle(async () => updateBookingStatus((req.validated!.params as any).id, (req.validated!.body as any).status, req.user!.id, req.user!.role), res);
+}
+
+export function resetMyBookingsController(req: AuthedRequest, res: Response, _next: NextFunction) {
+    handle(async () => resetMyBookings(req.user!.id), res);
+}
+
+export function resetAllBookingsController(req: AuthedRequest, res: Response, _next: NextFunction) {
+    handle(async () => resetAllBookings(), res);
 }
 
 async function handle(fn: () => Promise<any>, res: Response, statusCode = 200) {

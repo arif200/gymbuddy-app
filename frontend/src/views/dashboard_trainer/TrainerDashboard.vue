@@ -2,7 +2,7 @@
   <main class="flex-grow p-8 text-white overflow-y-auto bg-[#0a0b10]">
     <header class="mb-8">
       <h2 class="text-3xl font-black uppercase tracking-tighter italic">Dashboard</h2>
-      <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Selamat datang kembali, Coach!</p>
+      <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Selamat datang kembali, Trainer!</p>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
@@ -19,7 +19,7 @@
           <span class="text-blue-400 text-xl">👥</span>
         </div>
         <p class="text-2xl font-black italic">{{ stats.totalBookers }}</p>
-        <p class="text-[9px] font-black text-gray-600 uppercase tracking-widest">Total Booker</p>
+        <p class="text-[9px] font-black text-gray-600 uppercase tracking-widest">Total Pemesan</p>
       </div>
     </div>
 

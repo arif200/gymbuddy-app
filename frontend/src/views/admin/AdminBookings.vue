@@ -32,7 +32,7 @@
           <thead>
             <tr class="bg-black/20">
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">#</th>
-              <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">Member</th>
+              <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">Anggota</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">Sesi</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">Status</th>
               <th class="py-4 px-6 text-[10px] font-black text-gray-500 uppercase">Pembayaran</th>

@@ -9,8 +9,8 @@
             <span class="text-gray-400 group-hover:text-red-500 transform group-hover:-translate-x-1 transition-all text-xl">←</span>
           </router-link>
           <div>
-            <h1 class="text-3xl font-black uppercase tracking-tight text-white leading-none">Edit Profile</h1>
-            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Personal Information • GymBuddy</p>
+            <h1 class="text-3xl font-black uppercase tracking-tight text-white leading-none">Edit Profil</h1>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Informasi Pribadi • GymBuddy</p>
           </div>
         </div>
       </div>
@@ -42,27 +42,27 @@
                   <div class="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               </div>
-              <p class="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Profile Photo</p>
+              <p class="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Foto Profil</p>
               <input ref="fileInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden" @change="handleFileSelect" />
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
               
               <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Full Name</label>
+                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Nama Lengkap</label>
                 <div class="relative group">
                   <input 
                     v-model="profile.nama"
                     type="text"
                     autocomplete="name"
-                    placeholder="E.g. John Doe"
+                    placeholder="Contoh: Budi Santoso"
                     class="w-full bg-black/40 border border-gray-800 text-gray-200 p-4 rounded-2xl outline-none focus:border-red-500/50 focus:ring-4 focus:ring-red-500/5 transition-all duration-300 text-sm"
                   >
                 </div>
               </div>
 
               <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Email Address</label>
+                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Alamat Email</label>
                 <input 
                   v-model="profile.email"
                   type="email"
@@ -73,7 +73,7 @@
               </div>
 
               <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">City</label>
+                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Kota</label>
                 <input 
                   v-model="profile.kota"
                   type="text"
@@ -84,7 +84,7 @@
               </div>
 
               <div class="space-y-3">
-                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Province</label>
+                <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Provinsi</label>
                 <input 
                   v-model="profile.propinsi"
                   type="text"
@@ -100,7 +100,7 @@
               
               <div class="flex items-center gap-4 w-full sm:w-auto">
                 <router-link to="/dashboard/profile" class="flex-1 sm:flex-none text-center text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors px-6">
-                  Cancel
+                  Batal
                 </router-link>
                 
                 <button 
@@ -108,10 +108,10 @@
                   :disabled="loading"
                   class="flex-1 sm:flex-none relative overflow-hidden group bg-red-500 disabled:bg-gray-800 text-black px-12 py-4 rounded-2xl font-black uppercase text-xs tracking-[0.2em] hover:bg-red-400 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                 >
-                  <span v-if="!loading">Save Profile</span>
+                  <span v-if="!loading">Simpan Profil</span>
                   <div v-else class="flex items-center gap-2">
                     <div class="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
-                    <span>Saving...</span>
+                    <span>Menyimpan...</span>
                   </div>
                 </button>
               </div>
@@ -240,7 +240,7 @@ const handleSave = async () => {
     router.push('/dashboard/profile')
   } catch (err) {
     console.error('Update Error:', err)
-    alert('Update failed: ' + (err.response?.data?.error?.message || err.response?.data?.message || 'Server error'))
+    alert('Gagal memperbarui: ' + (err.response?.data?.error?.message || err.response?.data?.message || 'Server error'))
   } finally {
     loading.value = false
   }

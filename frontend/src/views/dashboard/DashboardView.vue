@@ -7,8 +7,8 @@
           <p class="text-red-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">{{ today }}</p>
           <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">Dashboard</h1>
           <p class="text-gray-500 text-sm mt-2">
-            Welcome back, <span class="text-white font-semibold">{{ userName }}</span>.
-            <span class="text-red-500/80 italic ml-1">Keep pushing.</span>
+            Selamat datang, <span class="text-white font-semibold">{{ userName }}</span>.
+            <span class="text-red-500/80 italic ml-1">Terus berlatih.</span>
           </p>
         </div>
         <div class="hidden sm:block">
@@ -17,7 +17,7 @@
             class="inline-flex items-center gap-2 bg-red-500 text-black px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-400 transition-all shadow-lg shadow-red-500/10 active:scale-[0.98]"
           >
             <PlusIcon class="w-4 h-4" />
-            Book Session
+            Booking Sesi
           </router-link>
         </div>
       </header>
@@ -50,10 +50,10 @@
           >
             <div class="flex justify-between items-center mb-6">
               <div>
-                <h3 class="font-black text-sm uppercase tracking-widest text-white">Upcoming Sessions</h3>
+                <h3 class="font-black text-sm uppercase tracking-widest text-white">Sesi Mendatang</h3>
                 <p class="text-gray-500 text-xs mt-1">{{ upcomingSessions.length }} sesi mendatang</p>
               </div>
-              <router-link to="/dashboard/my-bookings" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">View All</router-link>
+              <router-link to="/dashboard/my-bookings" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">Lihat Semua</router-link>
             </div>
 
             <div v-if="upcomingSessions.length === 0" class="flex flex-col items-center justify-center py-14 border border-dashed border-white/10 rounded-2xl">
@@ -106,10 +106,10 @@
           >
             <div class="flex justify-between items-center mb-6">
               <div>
-                <h3 class="font-black text-sm uppercase tracking-widest text-white">Recommended</h3>
+                <h3 class="font-black text-sm uppercase tracking-widest text-white">Rekomendasi</h3>
                 <p class="text-gray-500 text-xs mt-1">Sesi tersedia untukmu</p>
               </div>
-              <router-link to="/dashboard/find-trainers" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">Browse All</router-link>
+              <router-link to="/dashboard/find-trainers" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">Lihat Semua</router-link>
             </div>
 
             <div v-if="recommendedSessions.length === 0" class="flex flex-col items-center justify-center py-14 border border-dashed border-white/10 rounded-2xl">
@@ -140,7 +140,7 @@
                     to="/dashboard/find-trainers"
                     class="text-[10px] font-black uppercase tracking-wider text-red-500 hover:text-red-400 transition-colors"
                   >
-                    Book →
+                    Booking →
                   </router-link>
                 </div>
               </div>
@@ -179,7 +179,6 @@ const today = ref('')
 const photoBaseUrl = api.defaults.baseURL.replace(/\/api\/v1$/, '')
 
 const userName = computed(() => user.value.nama || 'Member')
-
 const stats = computed(() => {
   const now = new Date()
   const weekStart = new Date(now)
@@ -200,10 +199,10 @@ const stats = computed(() => {
 })
 
 const statCards = computed(() => [
-  { label: 'Active Sessions', value: stats.value.activeSessions, icon: UsersIcon },
-  { label: 'This Week', value: stats.value.thisWeek, icon: CalendarDaysIcon },
-  { label: 'Total Bookings', value: stats.value.totalBookings, icon: DumbbellIcon },
-  { label: 'Completed', value: stats.value.completedSessions, icon: ActivityIcon }
+  { label: 'Sesi Aktif', value: stats.value.activeSessions, icon: UsersIcon },
+  { label: 'Minggu Ini', value: stats.value.thisWeek, icon: CalendarDaysIcon },
+  { label: 'Total Booking', value: stats.value.totalBookings, icon: DumbbellIcon },
+  { label: 'Selesai', value: stats.value.completedSessions, icon: ActivityIcon }
 ])
 
 const upcomingSessions = computed(() => {

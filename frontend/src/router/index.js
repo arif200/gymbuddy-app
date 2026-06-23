@@ -40,6 +40,7 @@ const routes = [
   { path: '/dashboard/profile', component: () => import('../views/dashboard/profile.vue') },
   { path: '/dashboard/profile/edit', component: () => import('../views/dashboard/EditProfileView.vue') },
   { path: '/dashboard/profile/edit/:id', component: () => import('../views/dashboard/EditProfileView.vue') },
+  { path: '/dashboard/settings', component: () => import('../views/dashboard/SettingsView.vue') },
 
   // Dashboard trainer
   { path: '/trainer-panel/dashboard', name: 'TrainerDashboard', component: dbtrainer },

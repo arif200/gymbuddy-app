@@ -35,7 +35,7 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { LayoutDashboardIcon, SearchIcon, CalendarCheckIcon, TrendingUpIcon, UserIcon, LogOutIcon } from 'lucide-vue-next'
+import { LayoutDashboardIcon, SearchIcon, CalendarCheckIcon, TrendingUpIcon, UserIcon, SettingsIcon, LogOutIcon } from 'lucide-vue-next'
 
 const router = useRouter()
 const $route = useRoute()
@@ -46,6 +46,7 @@ const navItems = [
   { path: '/dashboard/my-bookings', label: 'Booking Saya', icon: CalendarCheckIcon },
   { path: '/dashboard/progres', label: 'Progress', icon: TrendingUpIcon },
   { path: '/dashboard/profile', label: 'Profil', icon: UserIcon },
+  { path: '/dashboard/settings', label: 'Pengaturan', icon: SettingsIcon },
 ]
 
 const handleLogout = () => {

@@ -20,14 +20,14 @@
               </div>
               
               <button @click="openEditModal" class="bg-red-500 text-black px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-400 shadow-lg shadow-red-500/10">
-                Edit Trainer Profile
+                Edit Profil Trainer
               </button>
             </div>
           </div>
         </div>
         
         <div class="bg-[#161920] p-10 rounded-[2rem] border border-gray-900 shadow-xl">
-          <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-8">Detailed Information</h3>
+          <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-8">Informasi Detail</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div v-for="(val, label) in infoFields" :key="label" class="border-b border-gray-800 pb-4">
               <p class="text-[9px] uppercase font-black text-red-500 tracking-[0.2em] mb-1.5 opacity-80">{{ label }}</p>
@@ -41,16 +41,16 @@
       <div v-if="showModal" class="fixed inset-0 z-[999] flex items-center justify-center p-6">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-md" @click="showModal = false"></div>
         <div class="relative bg-[#161920] w-full max-w-lg rounded-[2.5rem] border border-gray-800 p-10 shadow-2xl">
-          <h3 class="text-xl font-black uppercase italic mb-8 text-red-500">Update Profile</h3>
+          <h3 class="text-xl font-black uppercase italic mb-8 text-red-500">Perbarui Profil</h3>
           
           <form @submit.prevent="handleUpdate" class="space-y-5">
             <div>
-              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Full Name</label>
+              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Nama Lengkap</label>
               <input type="text" v-model="editForm.nama" autocomplete="name" class="w-full bg-black border border-gray-800 rounded-2xl py-4 px-6 text-white outline-none focus:border-red-500">
             </div>
 
             <div>
-              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Official Email</label>
+              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Email Resmi</label>
               <input type="email" v-model="editForm.email" autocomplete="email" class="w-full bg-black border border-gray-800 rounded-2xl py-4 px-6 text-white outline-none focus:border-red-500">
             </div>
 
@@ -86,11 +86,11 @@ const showModal = ref(false)
 const editForm = ref({ nama: '', propinsi: '', kota: '', email: '' })
 
 const infoFields = computed(() => ({
-  "Trainer Name": user.value.nama,
-  "Official Email": user.value.email,
-  "City": user.value.kota,
-  "Province": user.value.propinsi,
-  "Account Role": user.value.role
+  "Nama Trainer": user.value.nama,
+  "Email Resmi": user.value.email,
+  "Kota": user.value.kota,
+  "Provinsi": user.value.propinsi,
+  "Role Akun": user.value.role
 }))
 
 const fetchUserProfile = async () => {

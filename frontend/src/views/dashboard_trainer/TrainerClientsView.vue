@@ -17,7 +17,7 @@
         <table class="w-full text-left">
           <thead>
             <tr class="bg-black/20">
-              <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Member</th>
+              <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Anggota</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Detail Sesi</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center">Status</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center">Aksi</th>
@@ -34,14 +34,14 @@
                     {{ getInitials(booker.customer_name) }}
                   </div>
                   <div>
-                    <p class="text-xs font-black uppercase">{{ booker.customer_name || 'Member' }}</p>
+                    <p class="text-xs font-black uppercase">{{ booker.customer_name || 'Anggota' }}</p>
                     <p class="text-[9px] text-gray-600 lowercase">{{ booker.customer_email || '-' }}</p>
                   </div>
                 </div>
               </td>
               
               <td class="py-6 px-8">
-                <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'General Session' }}</p>
+                <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'Sesi Umum' }}</p>
                 <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.start_time) }}</p>
               </td>
 
@@ -67,7 +67,7 @@
     <div v-if="showModal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
       <div class="bg-[#161920] border border-gray-900 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
         <h2 class="text-xl font-black uppercase italic mb-1">Catat Progress</h2>
-        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Member: {{ selectedMember?.customer_name }}</p>
+        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Anggota: {{ selectedMember?.customer_name }}</p>
         <form @submit.prevent="saveProgress" class="space-y-4">
           <div>
             <label class="text-[9px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Aktivitas</label>

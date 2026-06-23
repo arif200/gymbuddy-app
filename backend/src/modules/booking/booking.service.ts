@@ -2,6 +2,7 @@ import {
     findAll, findById, findByMember, findBySessionTrainer,
     checkExistingBooking, create, updateStatus,
     getSessionForBooking, countConfirmedBookings,
+    deleteByMember, deleteAll,
 } from './booking.repo';
 
 export class BookingError extends Error {
@@ -92,4 +93,14 @@ export async function updateBookingStatus(
 
     const updated = await updateStatus(id, status);
     return updated;
+}
+
+export async function resetMyBookings(userId: number) {
+    const deletedCount = await deleteByMember(userId);
+    return { deletedCount };
+}
+
+export async function resetAllBookings() {
+    const deletedCount = await deleteAll();
+    return { deletedCount };
 }

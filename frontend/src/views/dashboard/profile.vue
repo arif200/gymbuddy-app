@@ -36,14 +36,14 @@
             </div>
             
             <router-link :to="`/dashboard/profile/edit/${user.id}`" class="inline-block bg-red-500 text-black px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:bg-red-400">
-              Edit Profile
+              Edit Profil
             </router-link>
           </div>
         </div>
       </div>
       
       <div class="bg-[#161920] p-8 rounded-[2rem] border border-gray-900">
-        <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-6">Detailed Information</h3>
+        <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-6">Informasi Detail</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div v-for="(val, label) in infoFields" :key="label">
             <p class="text-[9px] uppercase font-bold text-red-500 tracking-widest mb-1">{{ label }}</p>
@@ -81,11 +81,11 @@ const showToast = (message, type = 'success') => {
 }
 
 const infoFields = computed(() => ({
-  "Full Name": user.value.nama,
-  "Email Address": user.value.email,
-  "Current City": user.value.kota,
-  "Province": user.value.propinsi,
-  "Account Role": user.value.role
+  "Nama Lengkap": user.value.nama,
+  "Alamat Email": user.value.email,
+  "Kota Saat Ini": user.value.kota,
+  "Provinsi": user.value.propinsi,
+  "Role Akun": user.value.role
 }))
 
 const photoBaseUrl = api.defaults.baseURL.replace(/\/api\/v1$/, '')

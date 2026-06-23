@@ -7,7 +7,7 @@
           <p class="text-red-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">{{ today }}</p>
           <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">Dashboard Admin</h1>
           <p class="text-gray-500 text-sm mt-2">
-            Welcome back, <span class="text-white font-semibold">{{ userName }}</span>.
+            Selamat datang, <span class="text-white font-semibold">{{ userName }}</span>.
             <span class="text-red-500/80 italic ml-1">Ringkasan data platform GymBuddy.</span>
           </p>
         </div>
@@ -106,6 +106,17 @@
       </template>
 
     </div>
+
+    <!-- Toast -->
+    <Transition name="toast">
+      <div
+        v-if="toast.show"
+        :class="toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
+        class="fixed bottom-6 right-6 px-6 py-4 rounded-2xl text-white font-bold text-sm shadow-2xl z-50"
+      >
+        {{ toast.message }}
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -128,8 +139,14 @@ const roleDistribution = ref([])
 const bookingStatus = ref([])
 const user = ref({})
 const today = ref('')
+const toast = ref({ show: false, message: '', type: 'success' })
 
 const userName = computed(() => user.value.nama || 'Admin')
+
+const showToast = (message, type = 'success') => {
+  toast.value = { show: true, message, type }
+  setTimeout(() => { toast.value.show = false }, 3000)
+}
 
 const totalUsers = computed(() => {
   return roleDistribution.value.reduce((acc, curr) => acc + curr.count, 0)
@@ -145,7 +162,6 @@ const statCards = computed(() => [
   { label: 'Total Booking', value: stats.value.totalBookings || 0, icon: CalendarCheckIcon },
   { label: 'Pembayaran Lunas', value: stats.value.settledPayments || 0, icon: WalletIcon }
 ])
-
 const roleStyle = (role) => {
   const map = {
     admin: { icon: ShieldIcon, bg: 'bg-red-500/10', text: 'text-red-500' },
@@ -168,8 +184,8 @@ const statusBadgeClass = (status) => {
 const fetchStats = async () => {
   try {
     const [usersRes, bookingsRes, meRes] = await Promise.all([
-      api.get('/users', { params: { limit: 999 } }),
-      api.get('/bookings', { params: { limit: 999 } }),
+      api.get('/users', { params: { limit: 100 } }),
+      api.get('/bookings', { params: { limit: 100 } }),
       api.get('/auth/me').catch(() => ({ data: { data: {} } }))
     ])
 
@@ -199,8 +215,13 @@ const fetchStats = async () => {
     }
 
     user.value = meRes.data?.data || {}
+
+    if (allUsers.length === 0 && allBookings.length === 0) {
+      showToast('Data user dan booking kosong.', 'error')
+    }
   } catch (err) {
     console.error('Fetch stats error:', err)
+    showToast(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal memuat data dashboard.', 'error')
   } finally {
     loading.value = false
   }
@@ -221,4 +242,7 @@ onMounted(() => {
 .animate-fade-in {
   animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+.toast-enter-active, .toast-leave-active { transition: all 0.4s ease; }
+.toast-enter-from { opacity: 0; transform: translateX(100px); }
+.toast-leave-to { opacity: 0; transform: translateY(20px); }
 </style>
