@@ -27,22 +27,22 @@
             <tr v-if="loading">
               <td colspan="4" class="py-20 text-center text-red-500 font-black text-xs animate-pulse uppercase tracking-widest">Menghubungkan ke Database...</td>
             </tr>
-            <tr v-for="booker in filteredBookers" :key="booker.booking_id" class="border-b border-gray-900/50 hover:bg-white/[0.02]">
+            <tr v-for="booker in filteredBookers" :key="booker.id" class="border-b border-gray-900/50 hover:bg-white/[0.02]">
               <td class="py-6 px-8">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center font-black text-red-500 text-xs">
-                    {{ getInitials(booker.customer_name) }}
+                    {{ getInitials(booker.member_nama) }}
                   </div>
                   <div>
-                    <p class="text-xs font-black uppercase">{{ booker.customer_name || 'Anggota' }}</p>
-                    <p class="text-[9px] text-gray-600 lowercase">{{ booker.customer_email || '-' }}</p>
+                    <p class="text-xs font-black uppercase">{{ booker.member_nama || 'Anggota' }}</p>
+                    <p class="text-[9px] text-gray-600 lowercase">{{ booker.member_email || '-' }}</p>
                   </div>
                 </div>
               </td>
               
               <td class="py-6 px-8">
                 <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'Sesi Umum' }}</p>
-                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.start_time) }}</p>
+                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.session_start_time) }}</p>
               </td>
 
               <td class="py-6 px-8 text-center">
@@ -67,7 +67,7 @@
     <div v-if="showModal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
       <div class="bg-[#161920] border border-gray-900 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
         <h2 class="text-xl font-black uppercase italic mb-1">Catat Progress</h2>
-        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Anggota: {{ selectedMember?.customer_name }}</p>
+        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Anggota: {{ selectedMember?.member_nama }}</p>
         <form @submit.prevent="saveProgress" class="space-y-4">
           <div>
             <label class="text-[9px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Aktivitas</label>
@@ -108,7 +108,7 @@ const progressForm = ref({ activity: '', duration: 30, note: '' })
 const filteredBookers = computed(() => {
   if (!searchQuery.value) return bookers.value
   return bookers.value.filter(b => 
-    (b.member_nama || b.customer_name || '').toLowerCase().includes(searchQuery.value.toLowerCase())
+    (b.member_nama || '').toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
 
@@ -143,7 +143,7 @@ const openModal = (booker) => {
 const saveProgress = async () => {
   try {
     await api.post('/progress', {
-      booking_id: selectedMember.value.booking_id,
+      booking_id: selectedMember.value.id,
       activity: progressForm.value.activity,
       duration: progressForm.value.duration,
       note: progressForm.value.note

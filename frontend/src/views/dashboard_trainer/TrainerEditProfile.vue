@@ -12,10 +12,10 @@
               <h2 class="text-2xl font-black uppercase tracking-tight mb-1 italic">{{ user.nama || 'Loading...' }}</h2>
               <div class="text-gray-500 text-sm mb-5">
                 <p class="flex items-center justify-center md:justify-start gap-2">
-                  <span class="text-red-500">📧</span> {{ user.email }}
+                  <MailIcon class="w-4 h-4 text-red-500" /> {{ user.email }}
                 </p>
                 <p class="uppercase flex items-center justify-center md:justify-start gap-2 mt-1">
-                  <span class="text-red-500">📍</span> {{ user.kota || 'Kota belum diatur' }}, {{ user.propinsi || '' }}
+                  <MapPinIcon class="w-4 h-4 text-red-500" /> {{ user.kota || 'Kota belum diatur' }}, {{ user.propinsi || '' }}
                 </p>
               </div>
               
@@ -65,6 +65,16 @@
               </div>
             </div>
 
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Spesialisasi</label>
+              <input type="text" v-model="editForm.spesialisasi" placeholder="Strength Training, Yoga, Cardio..." class="w-full bg-black border border-gray-800 rounded-2xl py-4 px-6 text-white focus:border-red-500 outline-none">
+            </div>
+
+            <div>
+              <label class="text-[10px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Bio</label>
+              <textarea v-model="editForm.bio" placeholder="Ceritakan diri Anda sebagai trainer..." class="w-full bg-black border border-gray-800 rounded-2xl py-4 px-6 text-white focus:border-red-500 outline-none h-24"></textarea>
+            </div>
+
             <div class="flex gap-4 pt-6">
               <button type="button" @click="showModal = false" class="flex-1 py-4 bg-gray-900 rounded-2xl text-[10px] font-black uppercase text-gray-400">Batal</button>
               <button type="submit" class="flex-1 py-4 bg-red-500 text-black rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-red-500/20">Simpan Perubahan</button>
@@ -77,17 +87,20 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { MailIcon, MapPinIcon } from 'lucide-vue-next'
 import api from '../../utils/api'
 import { useAuthStore } from '../../stores/authStore'
 
 const authStore = useAuthStore()
 const user = ref({ id: '', nama: '', email: '', role: '', kota: '', propinsi: '' })
 const showModal = ref(false)
-const editForm = ref({ nama: '', propinsi: '', kota: '', email: '' })
+const editForm = ref({ nama: '', propinsi: '', kota: '', email: '', spesialisasi: '', bio: '' })
 
 const infoFields = computed(() => ({
   "Nama Trainer": user.value.nama,
   "Email Resmi": user.value.email,
+  "Spesialisasi": user.value.spesialisasi,
+  "Bio": user.value.bio,
   "Kota": user.value.kota,
   "Provinsi": user.value.propinsi,
   "Role Akun": user.value.role
@@ -106,7 +119,9 @@ const openEditModal = () => {
     nama: user.value.nama,
     email: user.value.email,
     propinsi: user.value.propinsi,
-    kota: user.value.kota
+    kota: user.value.kota,
+    spesialisasi: user.value.spesialisasi || '',
+    bio: user.value.bio || ''
   }
   showModal.value = true
 }
@@ -117,7 +132,9 @@ const handleUpdate = async () => {
       nama: editForm.value.nama,
       email: editForm.value.email,
       propinsi: editForm.value.propinsi,
-      kota: editForm.value.kota
+      kota: editForm.value.kota,
+      spesialisasi: editForm.value.spesialisasi,
+      bio: editForm.value.bio
     })
     
     // Update tampilan lokal

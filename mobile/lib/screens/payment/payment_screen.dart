@@ -62,12 +62,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     if (_paymentUrl == null) return;
     final uri = Uri.parse(_paymentUrl!);
 
-    // Use inAppWebView for Midtrans payment
+    // Use external browser for Midtrans payment
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!mounted) return;
 
-      // After returning from Midtrans webview, check payment status
+      // After returning from Midtrans, check payment status
       await _checkPaymentStatus();
     } else {
       if (mounted) {

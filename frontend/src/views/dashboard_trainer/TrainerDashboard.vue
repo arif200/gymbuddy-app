@@ -13,7 +13,7 @@
         </div>
         <div class="hidden sm:block">
           <router-link
-            to="/trainer/sessions"
+            to="/trainer-panel/sesion"
             class="inline-flex items-center gap-2 bg-red-500 text-black px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider hover:bg-red-400 transition-all shadow-lg shadow-red-500/10 active:scale-[0.98]"
           >
             <PlusIcon class="w-4 h-4" />
@@ -53,7 +53,7 @@
                 <h3 class="font-black text-sm uppercase tracking-widest text-white">Sesi Saya</h3>
                 <p class="text-gray-500 text-xs mt-1">{{ mySessions.length }} sesi dibuat</p>
               </div>
-              <router-link to="/trainer/sessions" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">Lihat Semua</router-link>
+              <router-link to="/trainer-panel/sesion" class="text-red-500 text-[10px] font-black uppercase tracking-wider hover:text-red-400 transition-colors">Lihat Semua</router-link>
             </div>
 
             <div v-if="mySessions.length === 0" class="flex flex-col items-center justify-center py-14 border border-dashed border-white/10 rounded-2xl">
@@ -61,7 +61,7 @@
                 <CalendarIcon class="w-6 h-6" />
               </div>
               <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Belum ada sesi dibuat</p>
-              <router-link to="/trainer/sessions" class="mt-4 text-red-500 text-[10px] font-black uppercase tracking-wider hover:underline">Buat sesi pertama</router-link>
+              <router-link to="/trainer-panel/sesion" class="mt-4 text-red-500 text-[10px] font-black uppercase tracking-wider hover:underline">Buat sesi pertama</router-link>
             </div>
 
             <div v-else class="space-y-3">
@@ -88,7 +88,7 @@
 
                 <div class="text-right flex-shrink-0">
                   <p class="text-sm font-black text-white">{{ formatRupiah(session.price) }}</p>
-                  <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-0.5">{{ session.total_bookings || 0 }} pemesan</p>
+                  <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-0.5">{{ bookingCountForSession(session.id) }} pemesan</p>
                 </div>
               </div>
             </div>
@@ -163,6 +163,7 @@ import { useAuthStore } from '../../stores/authStore'
 const authStore = useAuthStore()
 const loading = ref(true)
 const sessions = ref([])
+const trainerBookings = ref([])
 const user = ref({})
 const today = ref('')
 
@@ -172,6 +173,8 @@ const mySessions = computed(() => {
   const trainerId = String(user.value.id || '')
   return sessions.value.filter(s => String(s.trainer_id) === trainerId)
 })
+
+const mySessionIds = computed(() => new Set(mySessions.value.map(s => s.id)))
 
 const stats = computed(() => {
   const mine = mySessions.value
@@ -188,7 +191,7 @@ const stats = computed(() => {
       const d = new Date(s.start_time)
       return d >= weekStart && d <= weekEnd
     }).length,
-    totalBookers: mine.reduce((acc, s) => acc + (Number(s.total_bookings) || 0), 0),
+    totalBookers: trainerBookings.value.filter(b => mySessionIds.value.has(b.session_id)).length,
     completed: mine.filter(s => s.status?.toLowerCase() === 'completed').length
   }
 })
@@ -222,6 +225,10 @@ const formatRupiah = (price) => {
   return `Rp${Number(price).toLocaleString('id-ID')}`
 }
 
+const bookingCountForSession = (sessionId) => {
+  return trainerBookings.value.filter(b => b.session_id === sessionId).length
+}
+
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '--'
   const d = new Date(dateStr)
@@ -243,8 +250,12 @@ const fetchDashboardData = async () => {
     await authStore.init()
     user.value = authStore.user || {}
 
-    const res = await api.get('/sessions')
-    sessions.value = res.data?.data || []
+    const [sessionsRes, bookingsRes] = await Promise.all([
+      api.get('/sessions'),
+      api.get('/bookings/my').catch(() => ({ data: { data: [] } }))
+    ])
+    sessions.value = sessionsRes.data?.data || []
+    trainerBookings.value = bookingsRes.data?.data || []
   } catch (err) {
     console.error('Trainer dashboard fetch error:', err)
   } finally {

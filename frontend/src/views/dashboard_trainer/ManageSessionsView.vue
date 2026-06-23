@@ -29,19 +29,19 @@
 
         <div class="space-y-2 mb-8">
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">📅</span> {{ formatDate(session.start_time) }}
+            <CalendarIcon class="w-3 h-3 text-red-500 opacity-50" /> {{ formatDate(session.start_time) }}
           </div>
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">⏰</span> {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
+            <ClockIcon class="w-3 h-3 text-red-500 opacity-50" /> {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
           </div>
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">📊</span> Status: {{ session.status }}
+            <ActivityIcon class="w-3 h-3 text-red-500 opacity-50" /> Status: {{ session.status }}
           </div>
         </div>
 
         <div class="flex gap-2 pt-6 border-t border-gray-800">
           <button @click="openEditModal(session)" class="flex-1 py-3 bg-white/5 border border-gray-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Edit</button>
-          <button v-if="isAdmin" @click="deleteSession(session.id)" class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">Hapus</button>
+          <button @click="deleteSession(session.id)" class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">Hapus</button>
         </div>
       </div>
     </div>
@@ -88,7 +88,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { CalendarIcon, ClockIcon, ActivityIcon } from 'lucide-vue-next'
 import api from '../../utils/api'
 
 const sessions = ref([])
@@ -98,7 +99,6 @@ const showModal = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
 const userData = JSON.parse(localStorage.getItem('user') || '{}')
-const isAdmin = computed(() => userData.role?.toLowerCase() === 'admin')
 
 const form = ref({
   title: '',
@@ -148,13 +148,12 @@ const handleSubmit = async () => {
 }
 
 const deleteSession = async (id) => {
-  if (!isAdmin.value) return
   if (!confirm('Yakin ingin menghapus sesi ini?')) return
   try {
     await api.delete(`/sessions/${id}`)
     await fetchData()
   } catch (err) {
-    alert("Gagal: " + (err.response?.data?.message || "Hanya Admin yang bisa"))
+    alert("Gagal: " + (err.response?.data?.error?.message || err.response?.data?.message || "Tidak punya izin"))
   }
 }
 

@@ -1,5 +1,6 @@
 import type { Response, NextFunction } from 'express';
-import { success, error } from '../../utils/response';
+import { success, error, paginated } from '../../utils/response';
+import { logger } from '../../utils/logger';
 import type { AuthedRequest } from '../../middleware/auth';
 import type { ValidatedRequest } from '../../middleware/validate';
 import {
@@ -50,8 +51,7 @@ async function handle(fn: () => Promise<any>, res: Response) {
         if (err instanceof UserError) {
             return error(res, err.message, err.statusCode, err.code);
         }
+        logger.error({ err }, '[USER] Unhandled error');
         return error(res, 'Terjadi kesalahan server', 500, 'INTERNAL_ERROR');
     }
 }
-
-import { paginated } from '../../utils/response';
