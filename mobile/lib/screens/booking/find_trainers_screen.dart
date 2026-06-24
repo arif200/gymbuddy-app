@@ -96,6 +96,7 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
     if (_bookedSessionIds.contains(sessionId)) return;
     try {
       final res = await _api.createBooking(sessionId);
+      debugPrint('[BOOKING] createBooking response: $res');
       if (res['success'] == true || res['data'] != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +118,7 @@ class _FindTrainersScreenState extends ConsumerState<FindTrainersScreen> {
         }
       }
     } catch (e) {
+      debugPrint('[BOOKING] createBooking error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

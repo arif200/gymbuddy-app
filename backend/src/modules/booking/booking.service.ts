@@ -3,6 +3,7 @@ import {
     checkExistingBooking, create, updateStatus,
     getSessionForBooking, countConfirmedBookings,
     deleteByMember, deleteAll,
+    findCancelledBooking, reactivateBooking,
 } from './booking.repo';
 
 export class BookingError extends Error {
@@ -57,6 +58,15 @@ export async function createBooking(data: {
         throw new BookingError(400, 'VALIDATION_ERROR', 'Sesi ini tidak dapat dibooking');
     }
 
+    // Re-activate a previously cancelled booking instead of creating a duplicate
+    const cancelled = await findCancelledBooking(data.session_id, data.member_id);
+    if (cancelled) {
+        const reactivated = await reactivateBooking(cancelled.id, data.catatan);
+        if (reactivated) {
+            return reactivated;
+        }
+    }
+
     const existing = await checkExistingBooking(data.session_id, data.member_id);
     if (existing) {
         throw new BookingError(409, 'CONFLICT', 'Anda sudah booking sesi ini');
@@ -67,13 +77,20 @@ export async function createBooking(data: {
         throw new BookingError(400, 'VALIDATION_ERROR', 'Sesi sudah penuh');
     }
 
-    const booking = await create({
-        session_id: data.session_id,
-        member_id: data.member_id,
-        catatan: data.catatan,
-        payment_amount: session.price,
-    });
-    return booking;
+    try {
+        const booking = await create({
+            session_id: data.session_id,
+            member_id: data.member_id,
+            catatan: data.catatan,
+            payment_amount: session.price,
+        });
+        return booking;
+    } catch (err: any) {
+        if (err?.code === '23505' || err?.message?.includes('unique constraint') || err?.message?.includes('duplicate')) {
+            throw new BookingError(409, 'CONFLICT', 'Anda sudah pernah booking sesi ini');
+        }
+        throw new BookingError(500, 'INTERNAL_ERROR', 'Gagal membuat booking. Silakan coba lagi.');
+    }
 }
 
 export async function updateBookingStatus(

@@ -134,6 +134,31 @@ export async function checkExistingBooking(sessionId: number, memberId: number) 
     return rows.length > 0;
 }
 
+export async function findCancelledBooking(sessionId: number, memberId: number) {
+    const rows = await db.select({ id: bookings.id })
+    .from(bookings)
+    .where(and(
+        eq(bookings.session_id, sessionId),
+        eq(bookings.member_id, memberId),
+        eq(bookings.status, 'cancelled')
+    ))
+    .limit(1);
+    return rows[0] ?? null;
+}
+
+export async function reactivateBooking(id: number, catatan?: string) {
+    const rows = await db.update(bookings)
+    .set({
+        status: 'pending' as any,
+        payment_status: 'pending' as any,
+        updatedAt: new Date(),
+        ...(catatan !== undefined ? { catatan } : {}),
+    })
+    .where(eq(bookings.id, id))
+    .returning();
+    return rows[0] ?? null;
+}
+
 export async function create(data: {
     session_id: number;
     member_id: number;
