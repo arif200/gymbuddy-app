@@ -222,13 +222,15 @@ const toUTCDate = (d) => {
   return isNaN(date.getTime()) ? null : date
 }
 
+const TZ = 'Asia/Jakarta'
+
 // Format waktu lokal (konsisten dengan mobile)
 const formatDateTime = (d) => {
   const date = toUTCDate(d)
   if (!date) return '--'
   return new Intl.DateTimeFormat('id-ID', {
     weekday: 'long', day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit', timeZone: TZ
   }).format(date)
 }
 

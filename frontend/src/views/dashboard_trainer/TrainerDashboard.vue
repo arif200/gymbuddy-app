@@ -237,7 +237,7 @@ const formatDateTime = (dateStr) => {
   }
   const d = new Date(str)
   if (isNaN(d.getTime())) return '--'
-  return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+  return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' })}, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })}`
 }
 
 const statusClass = (status) => {

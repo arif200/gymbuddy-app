@@ -124,14 +124,16 @@ const toUTCDate = (d) => {
   return isNaN(date.getTime()) ? null : date
 }
 
+const TZ = 'Asia/Jakarta'
+
 const formatDate = (startStr, endStr) => {
   const start = toUTCDate(startStr)
   if (!start) return '--'
-  const datePart = start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-  const startTime = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  const datePart = start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: TZ })
+  const startTime = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
   const end = toUTCDate(endStr)
   if (end) {
-    return `${datePart} • ${startTime} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+    return `${datePart} • ${startTime} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: TZ })}`
   }
   return `${datePart} • ${startTime}`
 }

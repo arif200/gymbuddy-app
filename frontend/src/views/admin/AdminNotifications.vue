@@ -147,9 +147,15 @@ const fetchData = async () => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('id-ID', {
+  let str = dateStr.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const d = new Date(str)
+  if (isNaN(d.getTime())) return '-'
+  return d.toLocaleDateString('id-ID', {
     day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
   })
 }
 
