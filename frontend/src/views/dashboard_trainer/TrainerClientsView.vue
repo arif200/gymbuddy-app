@@ -42,7 +42,7 @@
               
               <td class="py-6 px-8">
                 <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'Sesi Umum' }}</p>
-                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.session_start_time) }}</p>
+                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.session_start_time, booker.session_end_time) }}</p>
               </td>
 
               <td class="py-6 px-8 text-center">
@@ -113,7 +113,28 @@ const filteredBookers = computed(() => {
 })
 
 const getInitials = (n) => n ? n.split(' ').map(i => i[0]).join('').toUpperCase().slice(0, 2) : 'M'
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', {day:'numeric', month:'short'}) : '--'
+
+const toUTCDate = (d) => {
+  if (!d) return null
+  let str = d.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const date = new Date(str)
+  return isNaN(date.getTime()) ? null : date
+}
+
+const formatDate = (startStr, endStr) => {
+  const start = toUTCDate(startStr)
+  if (!start) return '--'
+  const datePart = start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  const startTime = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  const end = toUTCDate(endStr)
+  if (end) {
+    return `${datePart} • ${startTime} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+  }
+  return `${datePart} • ${startTime}`
+}
 
 const getStatusClass = (status) => {
   if (status === 'pending') return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'

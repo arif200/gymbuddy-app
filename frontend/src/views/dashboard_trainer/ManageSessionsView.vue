@@ -212,20 +212,31 @@ const openCreateModal = () => {
 
 const formatRupiah = (price) => price ? `Rp${Number(price).toLocaleString('id-ID')}` : 'Rp0'
 
+const toUTCDate = (d) => {
+  if (!d) return null
+  let str = d.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const date = new Date(str)
+  return isNaN(date.getTime()) ? null : date
+}
+
 // Format waktu lokal (konsisten dengan mobile)
 const formatDateTime = (d) => {
-  if (!d) return '--'
+  const date = toUTCDate(d)
+  if (!date) return '--'
   return new Intl.DateTimeFormat('id-ID', {
     weekday: 'long', day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
-  }).format(new Date(d))
+  }).format(date)
 }
 
 const formatDuration = (start, end) => {
-  if (!start || !end) return '--'
-  const s = new Date(start).getTime()
-  const e = new Date(end).getTime()
-  const mins = Math.round((e - s) / 60000)
+  const s = toUTCDate(start)
+  const e = toUTCDate(end)
+  if (!s || !e) return '--'
+  const mins = Math.round((e.getTime() - s.getTime()) / 60000)
   return mins > 0 ? `${mins} menit` : '--'
 }
 

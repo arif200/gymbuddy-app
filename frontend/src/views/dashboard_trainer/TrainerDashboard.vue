@@ -231,7 +231,12 @@ const bookingCountForSession = (sessionId) => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '--'
-  const d = new Date(dateStr)
+  let str = dateStr.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const d = new Date(str)
+  if (isNaN(d.getTime())) return '--'
   return `${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}, ${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
 }
 

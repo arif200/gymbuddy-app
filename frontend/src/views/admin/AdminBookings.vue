@@ -61,8 +61,7 @@
               </td>
               <td class="py-4 px-6 text-xs text-gray-400">
                 <div class="flex flex-col gap-0.5">
-                  <span class="text-gray-300">{{ formatDateTime(b.session_start_time) }}</span>
-                  <span v-if="b.session_end_time" class="text-gray-600">{{ formatDuration(b.session_start_time, b.session_end_time) }}</span>
+                  <span class="text-gray-300">{{ formatSessionSchedule(b.session_start_time, b.session_end_time) }}</span>
                 </div>
               </td>
             </tr>
@@ -107,22 +106,28 @@ const statusBadge = (s) => {
 
 const formatRupiah = (p) => p ? `Rp${Number(p).toLocaleString('id-ID')}` : 'Rp0'
 
-const formatDateTime = (d) => {
-  if (!d) return '-'
-  // Pastikan ISO string dengan timezone di-parse ke local time
-  const iso = d.toString().replace(' ', 'T')
-  const date = new Date(iso)
-  if (isNaN(date.getTime())) return '-'
-  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) +
-    ' • ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+const toUTCDate = (d) => {
+  if (!d) return null
+  let str = d.toString().replace(' ', 'T')
+  // Jika tidak ada timezone info, asumsikan UTC (tambah 'Z')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const date = new Date(str)
+  return isNaN(date.getTime()) ? null : date
 }
 
-const formatDuration = (start, end) => {
-  if (!start || !end) return ''
-  const s = new Date(start.toString().replace(' ', 'T'))
-  const e = new Date(end.toString().replace(' ', 'T'))
-  const mins = Math.round((e - s) / 60000)
-  return mins > 0 ? `${mins} menit` : ''
+const formatSessionSchedule = (startStr, endStr) => {
+  const start = toUTCDate(startStr)
+  if (!start) return '-'
+  const datePart = start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  const startTime = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+  const end = toUTCDate(endStr)
+  if (end) {
+    const endTime = end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    return `${datePart} • ${startTime} - ${endTime}`
+  }
+  return `${datePart} • ${startTime}`
 }
 
 onMounted(() => {
