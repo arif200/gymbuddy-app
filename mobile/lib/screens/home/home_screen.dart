@@ -83,18 +83,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('GymBuddy'),
-        actions: [
-          if (auth.isLoggedIn)
-            IconButton(
-              icon: const Icon(Icons.person),
-              onPressed: () => _showProfileMenu(context, auth),
-            )
-          else
-            TextButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Login'),
-            ),
-        ],
+        actions: auth.isLoggedIn
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.person),
+                  onPressed: () => _showProfileMenu(context, auth),
+                ),
+              ]
+            : null,
       ),
       body: _buildBody(auth, theme),
       bottomNavigationBar: auth.isLoggedIn
@@ -116,11 +112,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  String _greeting(String? name) {
+    final hour = DateTime.now().hour;
+    String part;
+    if (hour >= 5 && hour < 11) {
+      part = 'pagi';
+    } else if (hour >= 11 && hour < 15) {
+      part = 'siang';
+    } else if (hour >= 15 && hour < 19) {
+      part = 'sore';
+    } else {
+      part = 'malam';
+    }
+    final userName = name?.trim();
+    if (userName != null && userName.isNotEmpty) {
+      return 'Selamat $part, $userName';
+    }
+    return 'Selamat $part';
+  }
+
   Widget _buildBody(AuthState auth, ThemeData theme) {
     if (!auth.isLoggedIn) {
       return _buildGuestView(theme);
     }
-    return _buildMemberView(theme);
+    return _buildMemberView(auth, theme);
   }
 
   Widget _buildGuestView(ThemeData theme) {
@@ -175,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildMemberView(ThemeData theme) {
+  Widget _buildMemberView(AuthState auth, ThemeData theme) {
     final items = _activeTab == 'sessions' ? _sessions : _bookings;
     final isEmpty = items.isEmpty;
 
@@ -189,7 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             // Welcome
             Text(
-              'Selamat Datang!',
+              _greeting(auth.user?['nama']),
               style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),

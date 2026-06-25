@@ -40,3 +40,16 @@ export const loginSchema = z.object({
         password: z.string().min(1, 'Password wajib diisi'),
     }),
 });
+
+export const forgotPasswordSchema = z.object({
+    body: z.object({
+        email: z.string().email('Email tidak valid'),
+    }),
+});
+
+export const resetPasswordSchema = z.object({
+    body: z.object({
+        token: z.string().min(1, 'Token wajib diisi'),
+        password: z.string().min(6, 'Password minimal 6 karakter'),
+    }),
+});

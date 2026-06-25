@@ -7,6 +7,8 @@ import {
     registerTrainerSchema,
     registerAdminSchema,
     loginSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
 } from './auth.schema';
 import {
     registerCustomerController,
@@ -14,6 +16,8 @@ import {
     registerAdminController,
     loginController,
     getMeController,
+    forgotPasswordController,
+    resetPasswordController,
 } from './auth.controller';
 
 const router = Router();
@@ -22,6 +26,8 @@ router.post('/register', validate(registerCustomerSchema), registerCustomerContr
 router.post('/register/trainer', validate(registerTrainerSchema), registerTrainerController);
 router.post('/register/admin', authMiddleware, requireRole('admin'), validate(registerAdminSchema), registerAdminController);
 router.post('/login', validate(loginSchema), loginController);
+router.post('/forgot-password', validate(forgotPasswordSchema), forgotPasswordController);
+router.post('/reset-password', validate(resetPasswordSchema), resetPasswordController);
 router.get('/me', authMiddleware, getMeController);
 
 export default router;

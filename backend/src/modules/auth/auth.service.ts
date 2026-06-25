@@ -1,6 +1,11 @@
 import bcrypt from 'bcrypt';
-import { findUserByEmail, findUserById, createUser } from './auth.repo';
+import crypto from 'crypto';
+import NodeCache from 'node-cache';
+import { findUserByEmail, findUserById, createUser, updatePassword } from './auth.repo';
 import { signToken } from '../../utils/jwt';
+
+// Token store: key = token, value = { userId, email }, TTL = 15 minutes
+const resetTokenCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
 
 export class AuthError extends Error {
     constructor(
@@ -115,6 +120,37 @@ export async function getMe(userId: number) {
         throw new AuthError(404, 'NOT_FOUND', 'User tidak ditemukan');
     }
     return sanitizeUser(user);
+}
+
+export async function forgotPassword(email: string) {
+    const user = await findUserByEmail(email);
+    if (!user) {
+        throw new AuthError(404, 'NOT_FOUND', 'Email tidak terdaftar');
+    }
+
+    // Generate random token
+    const token = crypto.randomBytes(32).toString('hex');
+    resetTokenCache.set(token, { userId: user.id, email: user.email });
+
+    return { message: 'Token reset password berhasil dibuat', token };
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+    const stored = resetTokenCache.get<{ userId: number; email: string }>(token);
+    if (!stored) {
+        throw new AuthError(400, 'INVALID_TOKEN', 'Token tidak valid atau sudah kedaluwarsa');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const updated = await updatePassword(stored.userId, hashed);
+    if (!updated) {
+        throw new AuthError(404, 'NOT_FOUND', 'User tidak ditemukan');
+    }
+
+    // Hapus token setelah digunakan
+    resetTokenCache.del(token);
+
+    return { message: 'Password berhasil diubah. Silakan login dengan password baru.' };
 }
 
 function sanitizeUser(user: any) {

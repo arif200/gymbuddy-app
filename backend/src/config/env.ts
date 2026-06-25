@@ -19,6 +19,10 @@ const envSchema = z.object({
 
     FRONTEND_URL: z.string().default('http://localhost:5173'),
 
+    EMAIL_USER: z.string().default(''),
+    EMAIL_PASS: z.string().default(''),
+    EMAIL_FROM: z.string().default('GymBuddy <noreply@gymbuddy.site>'),
+
     MIDTRANS_SERVER_KEY: z.string().default(''),
     MIDTRANS_CLIENT_KEY: z.string().default(''),
     MIDTRANS_IS_PRODUCTION: z.string().default('false'),

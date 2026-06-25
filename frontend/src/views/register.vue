@@ -70,7 +70,7 @@
               <select v-model="formData.role"
                       :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 focus:ring-red-500 outline-none appearance-none cursor-pointer', errors.role ? 'ring-2 ring-red-500' : '']">
                 <option value="" disabled>Pilih peran Anda</option>
-                <option value="customer">Member (Customer)</option>
+                <option value="customer">Member (Pelanggan)</option>
                 <option value="trainer">Trainer (Pelatih)</option>
               </select>
               <p v-if="errors.role" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.role }}</p>
@@ -92,7 +92,7 @@
 
           <p class="mt-8 text-center text-gray-400 text-sm">
             Sudah punya akun? 
-            <router-link to="/login" class="text-blue-400 font-bold hover:underline">Log in di sini</router-link>
+            <router-link to="/login" class="text-blue-400 font-bold hover:underline">Masuk di sini</router-link>
           </p>
         </div>
       </div>

@@ -40,3 +40,11 @@ export async function createUser(data: {
     }).returning();
     return rows[0];
 }
+
+export async function updatePassword(userId: number, hashedPassword: string) {
+    const rows = await db.update(users)
+        .set({ password: hashedPassword, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning({ id: users.id });
+    return rows.length > 0;
+}

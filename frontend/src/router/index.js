@@ -6,6 +6,8 @@ import About from '../views/about.vue'
 import Trainer from '../views/trainer.vue'
 import Login from '../views/LoginView.vue'
 import Register from '../views/register.vue'
+import ForgotPassword from '../views/ForgotPassword.vue'
+import ResetPassword from '../views/ResetPassword.vue'
 
 import DashboardView from '../views/dashboard/DashboardView.vue'
 import FindTrainers from '../views/dashboard/FindTrainers.vue'
@@ -30,6 +32,8 @@ const routes = [
   { path: '/trainer', component: Trainer },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
+  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/reset-password', component: ResetPassword },
 
   // Dashboard routes
   { path: '/dashboard', component: DashboardView },

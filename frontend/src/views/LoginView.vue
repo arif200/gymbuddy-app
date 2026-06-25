@@ -57,6 +57,10 @@
                   class="w-full bg-red-500 text-white py-4 rounded-2xl font-bold text-lg hover:bg-red-600 shadow-xl shadow-red-500/20 transition-all active:scale-[0.98] disabled:bg-gray-600">
             {{ loading ? 'Memproses...' : 'Masuk' }}
           </button>
+
+          <div class="text-right">
+            <router-link to="/forgot-password" class="text-gray-400 text-sm hover:text-red-500 transition-colors">Lupa Password?</router-link>
+          </div>
         </form>
 
         <p class="mt-8 text-center text-gray-400 text-sm">

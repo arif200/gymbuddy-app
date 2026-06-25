@@ -91,7 +91,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Daftar sebagai member atau trainer',
+                    'Daftar sebagai member GymBuddy',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -196,22 +196,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Role selector
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedRole,
-                    decoration: const InputDecoration(
-                      labelText: 'Daftar Sebagai',
-                      prefixIcon: Icon(Icons.badge_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'customer', child: Text('Member')),
-                      DropdownMenuItem(value: 'trainer', child: Text('Trainer')),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _selectedRole = v);
-                    },
-                  ),
+                  // Role selector (hidden - mobile only allows customer)
+                  // Dropdown removed: mobile app is customer-only
                   if (_selectedRole == 'trainer') ...[
                     const SizedBox(height: 16),
                     TextFormField(

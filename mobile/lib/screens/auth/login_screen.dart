@@ -153,7 +153,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : const Text('MASUK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  // Forgot password link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.go('/forgot-password'),
+                      child: const Text('Lupa Password?'),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
 
                   // Register link
                   TextButton(

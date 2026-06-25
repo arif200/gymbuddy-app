@@ -8,6 +8,8 @@ import {
     registerAdmin,
     login,
     getMe,
+    forgotPassword,
+    resetPassword,
     AuthError,
 } from './auth.service';
 
@@ -29,6 +31,14 @@ export function loginController(req: ValidatedRequest, res: Response, _next: Nex
 
 export function getMeController(req: AuthedRequest, res: Response, _next: NextFunction) {
     handleAuth(async () => getMe(req.user!.id), res);
+}
+
+export function forgotPasswordController(req: ValidatedRequest, res: Response, _next: NextFunction) {
+    handleAuth(async () => forgotPassword((req.validated!.body as any).email), res);
+}
+
+export function resetPasswordController(req: ValidatedRequest, res: Response, _next: NextFunction) {
+    handleAuth(async () => resetPassword((req.validated!.body as any).token, (req.validated!.body as any).password), res);
 }
 
 async function handleAuth(fn: () => Promise<any>, res: Response) {
