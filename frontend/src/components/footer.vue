@@ -34,7 +34,6 @@
           <ul class="space-y-3 text-gray-500 text-sm">
             <li>Cari Personal Trainer</li>
             <li>Booking Sesi Latihan</li>
-            <li>Program Diet</li>
             <li>Progress Tracker</li>
           </ul>
         </div>

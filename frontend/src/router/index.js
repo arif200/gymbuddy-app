@@ -1,10 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+
 import Home from '../views/home.vue'
 import About from '../views/about.vue'
 import Trainer from '../views/trainer.vue'
 import Login from '../views/LoginView.vue'
 import Register from '../views/register.vue'
+import ForgotPassword from '../views/ForgotPassword.vue'
+import ResetPassword from '../views/ResetPassword.vue'
+import VerifyOtp from '../views/VerifyOtp.vue'
 
 import DashboardView from '../views/dashboard/DashboardView.vue'
 import FindTrainers from '../views/dashboard/FindTrainers.vue'
@@ -22,11 +26,6 @@ const AdminDashboard = () => import('../views/admin/AdminDashboard.vue')
 const AdminUsers = () => import('../views/admin/AdminUsers.vue')
 const AdminTrainers = () => import('../views/admin/AdminTrainers.vue')
 const AdminBookings = () => import('../views/admin/AdminBookings.vue')
-const AdminArticles = () => import('../views/admin/AdminArticles.vue')
-const AdminPromo = () => import('../views/admin/AdminPromo.vue')
-const AdminFaq = () => import('../views/admin/AdminFaq.vue')
-const AdminBanners = () => import('../views/admin/AdminBanners.vue')
-const AdminNotifications = () => import('../views/admin/AdminNotifications.vue')
 
 const routes = [
   { path: '/', component: Home },
@@ -34,6 +33,9 @@ const routes = [
   { path: '/trainer', component: Trainer },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
+  { path: '/forgot-password', component: ForgotPassword },
+  { path: '/reset-password', component: ResetPassword },
+  { path: '/verify-otp', component: VerifyOtp },
 
   // Dashboard routes
   { path: '/dashboard', component: DashboardView },
@@ -44,6 +46,7 @@ const routes = [
   { path: '/dashboard/profile', component: () => import('../views/dashboard/profile.vue') },
   { path: '/dashboard/profile/edit', component: () => import('../views/dashboard/EditProfileView.vue') },
   { path: '/dashboard/profile/edit/:id', component: () => import('../views/dashboard/EditProfileView.vue') },
+  { path: '/dashboard/settings', component: () => import('../views/dashboard/SettingsView.vue') },
 
   // Dashboard trainer
   { path: '/trainer-panel/dashboard', name: 'TrainerDashboard', component: dbtrainer },
@@ -56,12 +59,6 @@ const routes = [
   { path: '/admin/users', component: AdminUsers, meta: { requiresAdmin: true } },
   { path: '/admin/trainers', component: AdminTrainers, meta: { requiresAdmin: true } },
   { path: '/admin/bookings', component: AdminBookings, meta: { requiresAdmin: true } },
-  { path: '/admin/payments', component: AdminBookings, meta: { requiresAdmin: true } },
-  { path: '/admin/articles', component: AdminArticles, meta: { requiresAdmin: true } },
-  { path: '/admin/promo', component: AdminPromo, meta: { requiresAdmin: true } },
-  { path: '/admin/faq', component: AdminFaq, meta: { requiresAdmin: true } },
-  { path: '/admin/banners', component: AdminBanners, meta: { requiresAdmin: true } },
-  { path: '/admin/notifications', component: AdminNotifications, meta: { requiresAdmin: true } },
 ]
 
 const router = createRouter({
@@ -70,27 +67,30 @@ const router = createRouter({
 })
 
 // Navigation Guard
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   const token = localStorage.getItem('token')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   // Protected dashboard/trainer routes
   if ((to.path.startsWith('/dashboard') || to.path.startsWith('/trainer-panel')) && !token) {
-    return next('/login')
+    return { path: '/login' }
   }
 
   // Admin routes - check role
   if (to.meta.requiresAdmin) {
-    if (!token) return next('/login')
-    if (user.role !== 'admin') return next('/dashboard')
+    if (!token) return { path: '/login' }
+    if (user.role !== 'admin') return { path: '/dashboard' }
   }
 
   // Redirect logged-in users away from login/register
   if ((to.path === '/login' || to.path === '/register') && token) {
-    return next('/dashboard')
+    return { path: '/dashboard' }
   }
 
-  next()
+  // Allow verify-otp page even when not logged in
+  if (to.path === '/verify-otp' && token) {
+    return { path: '/dashboard' }
+  }
 })
 
 export default router

@@ -170,14 +170,13 @@ const fetchStats = async () => {
       api.get('/trainers'),
       api.get('/sessions')
     ])
-    const t = trainerRes.data?.data?.length
-    const s = sessionRes.data?.data?.length
+    const t = trainerRes.data?.meta?.total ?? trainerRes.data?.data?.length
+    const s = sessionRes.data?.meta?.total ?? sessionRes.data?.data?.length
     if (t) trainerCount.value = t
     if (s) sessionCount.value = s
     statsLoaded.value = true
   } catch (e) {
     console.warn('Gagal fetch stats homepage:', e.message)
-    // Fallback ke nilai database yang diketahui
     trainerCount.value = 4
     sessionCount.value = 8
     statsLoaded.value = true

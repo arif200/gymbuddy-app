@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/api_service.dart';
+import '../payment/midtrans_webview_screen.dart';
 
 class MyBookingsScreen extends ConsumerStatefulWidget {
   const MyBookingsScreen({super.key});
@@ -76,7 +77,6 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
   Future<void> _payBooking(int bookingId) async {
     if (!mounted) return;
-    // Navigate to payment screen with booking info
     final booking = _bookings.firstWhere(
       (b) => (b['booking_id'] ?? b['id']) == bookingId,
       orElse: () => ({}),
@@ -87,17 +87,85 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
       );
       return;
     }
-    
-    final payBookingId = booking['booking_id'] ?? bookingId;
-    final title = Uri.encodeComponent(booking['session_title'] ?? 'Sesi Latihan');
-    final amount = double.tryParse((booking['payment_amount'] ?? 0).toString()) ?? 0;
-    
-    final result = await context.push<bool>('/payment/$payBookingId?title=$title&amount=$amount');
-    
-    // Refresh bookings after payment attempt
-    if (result == true) {
-      _loadBookings();
+
+    final payBookingId = booking['id'] ?? bookingId;
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Menyiapkan pembayaran...'),
+          ],
+        ),
+      ),
+    );
+
+    // Create payment
+    final res = await _api.createPayment(payBookingId);
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss loading dialog
+
+    if (res['success'] == false || res['data'] == null || res['data']?['redirect_url'] == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['message'] ?? 'Gagal membuat pembayaran'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    final paymentUrl = res['data']['redirect_url'];
+
+    // Open WebView directly
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MidtransWebViewScreen(
+          paymentUrl: paymentUrl,
+          finishUrl: 'https://gymbuddy.site/dashboard/my-bookings',
+        ),
+      ),
+    );
+
+    // After WebView closes, check payment status
+    if (!mounted) return;
+    final statusRes = await _api.getPaymentStatus(payBookingId);
+    if (!mounted) return;
+
+    final data = statusRes['data'] as Map<String, dynamic>?;
+    final paymentStatus = data?['payment_status'] ?? '';
+    final bookingStatus = data?['status'] ?? '';
+
+    if (paymentStatus == 'settlement' || bookingStatus == 'confirmed') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Pembayaran berhasil! Sesi Anda sudah dikonfirmasi.'),
+          backgroundColor: Colors.green[700],
+        ),
+      );
+    } else if (['deny', 'cancel', 'expire'].contains(paymentStatus)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pembayaran $paymentStatus. Silakan coba lagi.'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pembayaran masih diproses. Silakan cek status booking Anda.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+
+    _loadBookings();
   }
 
   @override
@@ -166,11 +234,11 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
     }
 
     final activeBookings = _bookings.where((b) =>
-      b['status'] == 'Pending' || b['status'] == 'Confirmed'
+      b['status'] == 'pending' || b['status'] == 'confirmed'
     ).toList();
 
     final pastBookings = _bookings.where((b) =>
-      b['status'] == 'Cancel' || b['status'] == 'Completed'
+      b['status'] == 'cancelled' || b['status'] == 'completed'
     ).toList();
 
     return RefreshIndicator(
@@ -259,15 +327,15 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
 
   Widget _buildBookingCard(dynamic booking, ThemeData theme, {required bool isActive}) {
     final title = booking['session_title'] ?? 'Sesi Latihan';
-    final startTime = booking['start_time'] != null
-        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(booking['start_time']))
+    final startTime = booking['session_start_time'] != null
+        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(booking['session_start_time']).toLocal())
         : '--';
     final trainerName = booking['trainer_name'] ?? 'Trainer';
     final trainerPhoto = booking['trainer_photo'] ?? '';
     final status = booking['status'] ?? '';
     final paymentStatus = booking['payment_status'] ?? '';
     final paymentAmount = booking['payment_amount'] ?? 0;
-    final bookingId = booking['booking_id'] ?? 0;
+    final bookingId = booking['id'] ?? 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -300,7 +368,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                   borderRadius: BorderRadius.circular(6),
                   child: trainerPhoto.isNotEmpty
                       ? CachedNetworkImage(
-                          imageUrl: '${ApiService.baseUrl.replaceAll('/api', '')}/$trainerPhoto',
+                          imageUrl: '${ApiService.photoBaseUrl}/$trainerPhoto',
                           width: 22,
                           height: 22,
                           fit: BoxFit.cover,
@@ -310,7 +378,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                             height: 22,
                             color: theme.colorScheme.primary.withAlpha(25),
                             child: Center(
-                              child: Text(trainerName[0].toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                              child: Text(trainerName.isNotEmpty ? trainerName[0].toUpperCase() : 'T', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
                             ),
                           ),
                         )
@@ -322,7 +390,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Center(
-                            child: Text(trainerName[0].toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                            child: Text(trainerName.isNotEmpty ? trainerName[0].toUpperCase() : 'T', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
                           ),
                         ),
                 ),
@@ -351,7 +419,7 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  if (status == 'Pending' && paymentStatus != 'settlement')
+                  if (status == 'pending' && paymentStatus != 'settlement')
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => _payBooking(bookingId),
@@ -365,9 +433,9 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
                         child: const Text('Bayar', style: TextStyle(fontSize: 12)),
                       ),
                     ),
-                  if (status == 'Pending')
+                  if (status == 'pending')
                     const SizedBox(width: 8),
-                  if (status == 'Pending')
+                  if (status == 'pending')
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _cancelBooking(bookingId),
@@ -399,11 +467,11 @@ class _MyBookingsScreenState extends ConsumerState<MyBookingsScreen> {
       bgColor = Colors.green[50]!;
       textColor = Colors.green[700]!;
       label = 'LUNAS';
-    } else if (status == 'Confirmed') {
+    } else if (status == 'confirmed') {
       bgColor = Colors.blue[50]!;
       textColor = Colors.blue[700]!;
       label = 'KONFIRM';
-    } else if (status == 'Cancel') {
+    } else if (status == 'cancelled') {
       bgColor = Colors.red[50]!;
       textColor = Colors.red[700]!;
       label = 'BATAL';

@@ -94,7 +94,7 @@ const banners = ref([])
 const loading = ref(true)
 const showForm = ref(false)
 const editing = ref(false)
-const form = ref({ judul: '', deskripsi: '', gambar: '', link: '', urutan: 0, is_active: 1 })
+const form = ref({ judul: '', deskripsi: '', gambar: '', link: '', urutan: 0, is_active: true })
 
 const fetchData = async () => {
   loading.value = true
@@ -110,7 +110,7 @@ const openForm = (banner) => {
     form.value = { ...banner }
     editing.value = true
   } else {
-    form.value = { judul: '', deskripsi: '', gambar: '', link: '', urutan: 0, is_active: 1 }
+    form.value = { judul: '', deskripsi: '', gambar: '', link: '', urutan: 0, is_active: true }
     editing.value = false
   }
   showForm.value = true
@@ -123,7 +123,7 @@ const handleSubmit = async () => {
     showForm.value = false
     fetchData()
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal menyimpan banner')
+    alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal menyimpan banner')
   }
 }
 
@@ -133,7 +133,7 @@ const deleteBanner = async (id) => {
     await api.delete(`/banners/${id}`)
     fetchData()
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal menghapus')
+    alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal menghapus')
   }
 }
 

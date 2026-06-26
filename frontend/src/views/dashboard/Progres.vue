@@ -5,7 +5,7 @@
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <h1 class="text-5xl font-black  tracking-tighter text-white uppercase">
-              PROGRESS TRACKER
+              PROGRESS LATIHAN
             </h1>
             <p class="text-gray-500 mt-2 font-medium">Catat dan pantau perkembangan latihan harianmu</p>
           </div>
@@ -43,7 +43,7 @@
           <div v-if="showAddForm" class="p-8 rounded-3xl bg-[#111111] border border-gray-800 shadow-2xl">
             <div class="flex items-center gap-3 mb-8">
               <div class="w-2 h-8 bg-red-500 rounded-full"></div>
-              <h2 class="text-2xl font-black  text-white">LOG NEW WORKOUT</h2>
+              <h2 class="text-2xl font-black  text-white">CATAT LATIHAN BARU</h2>
             </div>
             
             <form @submit.prevent="handleAddWorkout" class="space-y-8">
@@ -135,8 +135,8 @@ const newWorkout = ref({ activity: "", duration: 30, note: "" })
 const summaryStats = computed(() => [
   { label: "Latihan Hari Ini", value: workouts.value.length, textColor: "text-red-500" },
   { label: "Total Durasi", value: workouts.value.reduce((sum, w) => sum + (Number(w.duration) || 0), 0) + ' menit', textColor: "text-white" },
-  { label: "Day Streak", value: 1, textColor: "text-white" },
-  { label: "Total Workouts", value: workouts.value.length, textColor: "text-white" }
+  { label: "Hari Beruntun", value: 1, textColor: "text-white" },
+  { label: "Total Latihan", value: workouts.value.length, textColor: "text-white" }
 ])
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '--'
@@ -144,8 +144,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
 const fetchProgress = async () => {
   loading.value = true
   try {
-    // Gunakan endpoint /my untuk mengambil progress milik user yang login
-    const res = await api.get('/progress/my')
+    const res = await api.get('/progress')
     let data = res.data?.data || []
     workouts.value = Array.isArray(data) ? data : []
   } catch (err) {

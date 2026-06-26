@@ -59,7 +59,7 @@ const editing = ref(false)
 const form = ref({ pertanyaan: '', jawaban: '', kategori: 'umum', urutan: 0 })
 
 const fetchData = async () => {
-  try { const res = await api.get('/faq'); faqs.value = res.data?.data || [] }
+  try { const res = await api.get('/faqs'); faqs.value = res.data?.data || [] }
   catch (err) { console.error(err) }
 }
 
@@ -71,16 +71,16 @@ const openForm = (faq) => {
 
 const handleSubmit = async () => {
   try {
-    if (editing.value) await api.put(`/faq/${form.value.id}`, form.value)
-    else await api.post('/faq', form.value)
+    if (editing.value) await api.put(`/faqs/${form.value.id}`, form.value)
+    else await api.post('/faqs', form.value)
     showForm.value = false; fetchData()
-  } catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  } catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 const deleteFaq = async (id) => {
   if (!confirm('Yakin?')) return
-  try { await api.delete(`/faq/${id}`); fetchData() }
-  catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  try { await api.delete(`/faqs/${id}`); fetchData() }
+  catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 onMounted(fetchData)

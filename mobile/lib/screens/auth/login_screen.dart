@@ -25,10 +25,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+    final email = _emailController.text.trim().toLowerCase();
     await ref.read(authProvider.notifier).login(
-      _emailController.text.trim(),
+      email,
       _passwordController.text,
     );
+
+    if (!mounted) return;
+    final authState = ref.read(authProvider);
+    if (authState.error != null && authState.error!.contains('belum diverifikasi')) {
+      context.go('/verify-otp?email=$email');
+    }
   }
 
   @override
@@ -153,7 +160,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : const Text('MASUK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  // Forgot password link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.go('/forgot-password'),
+                      child: const Text('Lupa Password?'),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
 
                   // Register link
                   TextButton(

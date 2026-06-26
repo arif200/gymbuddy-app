@@ -83,18 +83,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('GymBuddy'),
-        actions: [
-          if (auth.isLoggedIn)
-            IconButton(
-              icon: const Icon(Icons.person),
-              onPressed: () => _showProfileMenu(context, auth),
-            )
-          else
-            TextButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Login'),
-            ),
-        ],
+        actions: auth.isLoggedIn
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.person),
+                  onPressed: () => _showProfileMenu(context, auth),
+                ),
+              ]
+            : null,
       ),
       body: _buildBody(auth, theme),
       bottomNavigationBar: auth.isLoggedIn
@@ -116,11 +112,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  String _greeting(String? name) {
+    final hour = DateTime.now().hour;
+    String part;
+    if (hour >= 5 && hour < 11) {
+      part = 'pagi';
+    } else if (hour >= 11 && hour < 15) {
+      part = 'siang';
+    } else if (hour >= 15 && hour < 19) {
+      part = 'sore';
+    } else {
+      part = 'malam';
+    }
+    final userName = name?.trim();
+    if (userName != null && userName.isNotEmpty) {
+      return 'Selamat $part, $userName';
+    }
+    return 'Selamat $part';
+  }
+
   Widget _buildBody(AuthState auth, ThemeData theme) {
     if (!auth.isLoggedIn) {
       return _buildGuestView(theme);
     }
-    return _buildMemberView(theme);
+    return _buildMemberView(auth, theme);
   }
 
   Widget _buildGuestView(ThemeData theme) {
@@ -175,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildMemberView(ThemeData theme) {
+  Widget _buildMemberView(AuthState auth, ThemeData theme) {
     final items = _activeTab == 'sessions' ? _sessions : _bookings;
     final isEmpty = items.isEmpty;
 
@@ -189,7 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             // Welcome
             Text(
-              'Selamat Datang!',
+              _greeting(auth.user?['nama']),
               style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -268,15 +283,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? (item['price'] ?? 0)
         : (item['payment_amount'] ?? 0);
     final startTime = item['start_time'] != null
-        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(item['start_time']))
-        : '--';
+        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(item['start_time']).toLocal())
+        : (item['session_start_time'] != null
+            ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(item['session_start_time']).toLocal())
+            : '--');
     final trainerName = item['trainer_name'] ?? 'Trainer';
-    final trainerPhoto = item['trainer_photo'] ?? item['foto'] ?? '';
+    final trainerPhoto = item['trainer_photo'] ?? '';
     final status = item['status'] ?? '';
     final paymentStatus = item['payment_status'] ?? '';
-    final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
+    final baseUrl = ApiService.photoBaseUrl;
+    final sessionId = isSession ? (item['id'] as int?) : null;
 
-    return Card(
+    Widget cardContent = Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -345,7 +363,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             color: theme.colorScheme.primary.withAlpha(25),
                             child: Center(
                               child: Text(
-                                trainerName[0].toUpperCase(),
+                                trainerName.isNotEmpty ? trainerName[0].toUpperCase() : 'T',
                                 style: TextStyle(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -364,7 +382,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              trainerName[0].toUpperCase(),
+                              trainerName.isNotEmpty ? trainerName[0].toUpperCase() : 'T',
                               style: TextStyle(
                                 color: theme.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -381,7 +399,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                     decoration: BoxDecoration(
-                      color: status == 'Confirmed'
+                      color: status == 'confirmed'
                           ? Colors.green[50]
                           : Colors.grey[100],
                       borderRadius: BorderRadius.circular(4),
@@ -389,7 +407,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Text(
                       status,
                       style: TextStyle(
-                        color: status == 'Confirmed'
+                        color: status == 'confirmed'
                             ? Colors.green[700]
                             : Colors.grey[600],
                         fontSize: 9,
@@ -408,6 +426,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+
+    if (isSession && sessionId != null) {
+      return GestureDetector(
+        onTap: () => context.push('/session/$sessionId'),
+        child: cardContent,
+      );
+    }
+    return cardContent;
   }
 
   void _showProfileMenu(BuildContext context, AuthState auth) {
@@ -420,10 +446,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ListTile(
               leading: CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Text(
-                  (auth.user?['nama'] ?? 'U').toString()[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white),
-                ),
+                backgroundImage: (auth.user?['foto'] != null && (auth.user!['foto'] as String).isNotEmpty)
+                    ? CachedNetworkImageProvider('${ApiService.photoBaseUrl}/${auth.user!['foto']}')
+                    : null,
+                child: (auth.user?['foto'] == null || (auth.user!['foto'] as String).isEmpty)
+                    ? Text(
+                        (auth.user?['nama'] ?? 'U').toString()[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white),
+                      )
+                    : null,
               ),
               title: Text(auth.user?['nama'] ?? 'User'),
               subtitle: Text(auth.user?['email'] ?? ''),

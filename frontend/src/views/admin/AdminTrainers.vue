@@ -43,7 +43,7 @@ const trainers = ref([])
 
 const fetchData = async () => {
   try {
-    const res = await api.get('/user', { params: { role: 'trainer', _limit: 100 } })
+    const res = await api.get('/users', { params: { role: 'trainer', limit: 100 } })
     trainers.value = res.data?.data || []
   } catch (err) { console.error(err) }
 }
@@ -51,9 +51,9 @@ const fetchData = async () => {
 const deleteTrainer = async (id) => {
   if (!confirm('Yakin ingin menghapus trainer ini?')) return
   try {
-    await api.delete(`/user/${id}`)
+    await api.delete(`/users/${id}`)
     fetchData()
-  } catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  } catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 onMounted(fetchData)

@@ -10,12 +10,12 @@ class ApiService {
 
   late final Dio _dio;
 
-  // Untuk development, ganti ke localhost. Untuk production, pakai Render.
-  static const String _prodUrl = 'https://gymbuddy-api-production-81df.up.railway.app/api';
-  static const String _devUrl = 'http://localhost:5000/api';
-  static const bool _isProduction = true; // Using Railway production backend
+  static const String _prodUrl = 'https://api.gymbuddy.site/api/v1';
+  static const String _devUrl = 'http://10.0.2.2:5000/api/v1';
+  static const bool _isProduction = true;
 
   static String get baseUrl => _isProduction ? _prodUrl : _devUrl;
+  static String get photoBaseUrl => baseUrl.replaceAll('/api/v1', '');
 
   /// Set token langsung ke default headers Dio dan cache
   static void setToken(String? token) {
@@ -66,14 +66,22 @@ class ApiService {
     if (e is DioException) {
       final data = e.response?.data;
       String msg;
+      String? code;
+      Map<String, dynamic>? errorObj;
       if (data is Map) {
-        msg = data['message']?.toString() ?? 'Terjadi kesalahan. Coba lagi.';
+        msg = data['message']?.toString() ??
+            data['error']?['message']?.toString() ??
+            'Terjadi kesalahan. Coba lagi.';
+        code = data['error']?['code']?.toString() ?? data['code']?.toString();
+        errorObj = data['error'] is Map<String, dynamic> 
+            ? data['error'] as Map<String, dynamic> 
+            : null;
       } else if (data != null) {
         msg = data.toString();
       } else {
         msg = 'Terjadi kesalahan. Coba lagi.';
       }
-      return {'success': false, 'message': msg};
+      return {'success': false, 'message': msg, if (code != null) 'code': code, if (errorObj != null) 'error': errorObj};
     }
     return {'success': false, 'message': 'Koneksi error. Periksa internet Anda.'};
   }
@@ -81,24 +89,82 @@ class ApiService {
   // ==================== AUTH ====================
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
+      print('[DEBUG] Login request: $baseUrl/auth/login');
+      print('[DEBUG] Login payload: email=$email password=${'*' * password.length}');
       final res = await _dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
       final data = res.data;
+      print('[DEBUG] Login response: $data');
       if (data['token'] != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
       }
       return data;
     } catch (e) {
+      print('[DEBUG] Login error: $e');
       return _handleError(e);
     }
   }
 
   Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
     try {
-      final res = await _dio.post('/auth/register', data: data);
+      final role = data.remove('role') ?? 'customer';
+      final endpoint = role == 'trainer' ? '/auth/register/trainer' : '/auth/register';
+      print('[DEBUG] Register request: $baseUrl$endpoint');
+      print('[DEBUG] Register payload: $data');
+      final res = await _dio.post(endpoint, data: data);
+      print('[DEBUG] Register response: ${res.data}');
+      return res.data;
+    } catch (e) {
+      print('[DEBUG] Register error: $e');
+      return _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+    try {
+      print('[DEBUG] Verify OTP request: $baseUrl/auth/verify-otp');
+      print('[DEBUG] Verify OTP payload: email=$email otp=$otp');
+      final res = await _dio.post('/auth/verify-otp', data: {'email': email, 'otp': otp});
+      print('[DEBUG] Verify OTP response: ${res.data}');
+      return res.data;
+    } catch (e) {
+      print('[DEBUG] Verify OTP error: $e');
+      return _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> resendOtp(String email) async {
+    try {
+      print('[DEBUG] Resend OTP request: $baseUrl/auth/resend-otp');
+      print('[DEBUG] Resend OTP payload: email=$email');
+      final res = await _dio.post('/auth/resend-otp', data: {'email': email});
+      print('[DEBUG] Resend OTP response: ${res.data}');
+      return res.data;
+    } catch (e) {
+      print('[DEBUG] Resend OTP error: $e');
+      return _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final res = await _dio.post('/auth/forgot-password', data: {'email': email});
+      return res.data;
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password) async {
+    try {
+      final res = await _dio.post('/auth/reset-password', data: {
+        'email': email,
+        'otp': otp,
+        'password': password,
+      });
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -108,8 +174,8 @@ class ApiService {
   // ==================== USER / PROFILE ====================
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
-      final res = await _dio.get('/user/profile');
-      return {'success': true, 'data': res.data};
+      final res = await _dio.get('/users/profile');
+      return {'success': true, 'data': res.data['data'] ?? res.data};
     } catch (e) {
       return _handleError(e);
     }
@@ -117,8 +183,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     try {
-      final res = await _dio.put('/user/profile', data: data);
-      return {'success': true, 'message': res.data['message'] ?? 'Profil berhasil diperbarui'};
+      final res = await _dio.put('/users/profile', data: data);
+      return {'success': true, 'message': res.data['message'] ?? 'Profil berhasil diperbarui', 'data': res.data['data']};
     } catch (e) {
       return _handleError(e);
     }
@@ -127,7 +193,7 @@ class ApiService {
   // ==================== SESSIONS ====================
   Future<Map<String, dynamic>> getSessions({int page = 1, int limit = 10, String? search, String? kota}) async {
     try {
-      final params = <String, dynamic>{'_page': page, '_limit': limit};
+      final params = <String, dynamic>{'page': page, 'limit': limit};
       if (search != null) params['search'] = search;
       if (kota != null) params['kota'] = kota;
       final res = await _dio.get('/sessions', queryParameters: params);
@@ -171,7 +237,7 @@ class ApiService {
   Future<Map<String, dynamic>> cancelBooking(int id) async {
     try {
       final res = await _dio.patch('/bookings/$id/status', data: {
-        'status': 'Cancel',
+        'status': 'cancelled',
       });
       return {'success': true, 'message': res.data['message'] ?? 'Booking dibatalkan'};
     } catch (e) {
@@ -213,7 +279,7 @@ class ApiService {
   Future<Map<String, dynamic>> getTrainers({String? search, String? kota}) async {
     try {
       final params = <String, dynamic>{};
-      if (search != null) params['nama'] = search;
+      if (search != null) params['search'] = search;
       if (kota != null) params['kota'] = kota;
       final res = await _dio.get('/trainers', queryParameters: params);
       return {'success': true, 'data': res.data['data'] ?? [], 'total': res.data['total'] ?? 0};
@@ -226,7 +292,7 @@ class ApiService {
   Future<Map<String, dynamic>> getArticles({int page = 1, int limit = 10}) async {
     try {
       final res = await _dio.get('/articles', queryParameters: {
-        '_page': page, '_limit': limit,
+        'page': page, 'limit': limit,
       });
       return res.data;
     } catch (e) {
@@ -246,7 +312,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> getMyProgress() async {
     try {
-      final res = await _dio.get('/progress/my');
+      final res = await _dio.get('/progress');
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -279,7 +345,7 @@ class ApiService {
   // ==================== PROMO ====================
   Future<Map<String, dynamic>> checkPromo(String kode) async {
     try {
-      final res = await _dio.get('/promo/check', queryParameters: {'kode': kode});
+      final res = await _dio.get('/promos/code/$kode');
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -292,7 +358,7 @@ class ApiService {
       final params = <String, dynamic>{
         if (kategori != null) 'kategori': kategori,
       };
-      final res = await _dio.get('/faq', queryParameters: params);
+      final res = await _dio.get('/faqs', queryParameters: params);
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -302,7 +368,7 @@ class ApiService {
   // ==================== NOTIFICATIONS ====================
   Future<Map<String, dynamic>> getNotifications() async {
     try {
-      final res = await _dio.get('/notifications/my');
+      final res = await _dio.get('/notifications');
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -344,7 +410,7 @@ class ApiService {
   // ==================== TRAINER VIEWS ====================
   Future<Map<String, dynamic>> getTrainerBookingHistory() async {
     try {
-      final res = await _dio.get('/views/customer-booking-history');
+      final res = await _dio.get('/bookings/my');
       return {'success': true, 'data': res.data['data'] ?? []};
     } catch (e) {
       return _handleError(e);
@@ -382,7 +448,7 @@ class ApiService {
   // ==================== ADMIN ====================
   Future<Map<String, dynamic>> adminGetDashboard() async {
     try {
-      final res = await _dio.get('/analytics/dashboard');
+      final res = await _dio.get('/sessions', queryParameters: {'limit': 100});
       return res.data;
     } catch (e) {
       return _handleError(e);
@@ -391,8 +457,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> adminGetUsers({int page = 1, int limit = 20}) async {
     try {
-      final res = await _dio.get('/user/', queryParameters: {
-        '_page': page, '_limit': limit,
+      final res = await _dio.get('/users', queryParameters: {
+        'page': page, 'limit': limit,
       });
       return {'success': true, 'data': res.data['data'] ?? []};
     } catch (e) {
@@ -402,7 +468,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> adminDeleteUser(int id) async {
     try {
-      final res = await _dio.delete('/user/$id');
+      final res = await _dio.delete('/users/$id');
       return {'success': true, 'message': res.data['message'] ?? 'User berhasil dihapus'};
     } catch (e) {
       return _handleError(e);
@@ -411,7 +477,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> adminGetPromos() async {
     try {
-      final res = await _dio.get('/promo');
+      final res = await _dio.get('/promos');
       return {'success': true, 'data': res.data['data'] ?? []};
     } catch (e) {
       return _handleError(e);

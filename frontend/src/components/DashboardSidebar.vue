@@ -16,7 +16,7 @@
           ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
           : 'text-gray-400 hover:text-white hover:bg-white/5'"
       >
-        <span>{{ item.icon }}</span>
+        <component :is="item.icon" class="w-5 h-5" />
         <span>{{ item.label }}</span>
       </router-link>
     </nav>
@@ -24,9 +24,9 @@
     <div class="p-5 border-t border-white/5">
       <button 
         @click="handleLogout"
-        class="flex w-full items-center justify-center gap-2 px-4 py-3 border border-white/10 rounded-xl text-sm hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all duration-200 cursor-pointer"
+        class="flex w-full items-center gap-3 px-4 py-3 border border-white/10 rounded-xl text-sm hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all duration-200 cursor-pointer"
       >
-        <span>🚪</span>
+        <LogOutIcon class="w-5 h-5" />
         <span>Keluar</span>
       </button>
     </div>
@@ -35,16 +35,18 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
+import { LayoutDashboardIcon, SearchIcon, CalendarCheckIcon, TrendingUpIcon, UserIcon, SettingsIcon, LogOutIcon } from 'lucide-vue-next'
 
 const router = useRouter()
 const $route = useRoute()
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/dashboard/find-trainers', label: 'Cari Trainer', icon: '🔍' },
-  { path: '/dashboard/my-bookings', label: 'Booking Saya', icon: '📋' },
-  { path: '/dashboard/progres', label: 'Progress', icon: '📈' },
-  { path: '/dashboard/profile', label: 'Profil', icon: '👤' },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
+  { path: '/dashboard/find-trainers', label: 'Cari Trainer', icon: SearchIcon },
+  { path: '/dashboard/my-bookings', label: 'Booking Saya', icon: CalendarCheckIcon },
+  { path: '/dashboard/progres', label: 'Progress', icon: TrendingUpIcon },
+  { path: '/dashboard/profile', label: 'Profil', icon: UserIcon },
+  { path: '/dashboard/settings', label: 'Pengaturan', icon: SettingsIcon },
 ]
 
 const handleLogout = () => {

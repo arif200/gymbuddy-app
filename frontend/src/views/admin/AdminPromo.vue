@@ -74,7 +74,7 @@ const editing = ref(false)
 const form = ref({ kode: '', judul: '', tipe: 'nominal', nilai: 0, min_booking: 1 })
 
 const fetchData = async () => {
-  try { const res = await api.get('/promo'); promos.value = res.data?.data || [] }
+  try { const res = await api.get('/promos'); promos.value = res.data?.data || [] }
   catch (err) { console.error(err) }
 }
 
@@ -86,16 +86,16 @@ const openForm = (promo) => {
 
 const handleSubmit = async () => {
   try {
-    if (editing.value) await api.put(`/promo/${form.value.id}`, form.value)
-    else await api.post('/promo', form.value)
+    if (editing.value) await api.put(`/promos/${form.value.id}`, form.value)
+    else await api.post('/promos', form.value)
     showForm.value = false; fetchData()
-  } catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  } catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 const deletePromo = async (id) => {
   if (!confirm('Yakin?')) return
-  try { await api.delete(`/promo/${id}`); fetchData() }
-  catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  try { await api.delete(`/promos/${id}`); fetchData() }
+  catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 const formatRupiah = (p) => `Rp${Number(p).toLocaleString('id-ID')}`

@@ -16,9 +16,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _propinsiController = TextEditingController();
+  final _kotaController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  String _selectedRole = 'customer';
 
   @override
   void dispose() {
@@ -26,27 +27,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _propinsiController.dispose();
+    _kotaController.dispose();
     super.dispose();
   }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authProvider.notifier).register({
+    final data = <String, dynamic>{
       'nama': _namaController.text.trim(),
-      'email': _emailController.text.trim(),
+      'email': _emailController.text.trim().toLowerCase(),
       'password': _passwordController.text,
-      'role': _selectedRole,
-    });
+      'role': 'customer',
+      'propinsi': _propinsiController.text.trim(),
+      'kota': _kotaController.text.trim(),
+    };
 
-    if (success && mounted) {
+    final email = await ref.read(authProvider.notifier).register(data);
+
+    if (email != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Registrasi berhasil! Silakan login.'),
+          content: const Text('Pendaftaran berhasil! Kode OTP telah dikirim ke email Anda.'),
           backgroundColor: Colors.green[700],
         ),
       );
-      context.go('/login');
+      context.go('/verify-otp?email=$email');
     }
   }
 
@@ -84,7 +91,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Daftar sebagai member atau trainer',
+                    'Lengkapi data diri untuk membuat akun member',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -189,20 +196,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Role selector
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedRole,
+                  // Provinsi field
+                  TextFormField(
+                    controller: _propinsiController,
                     decoration: const InputDecoration(
-                      labelText: 'Daftar Sebagai',
-                      prefixIcon: Icon(Icons.badge_outlined),
+                      labelText: 'Provinsi',
+                      prefixIcon: Icon(Icons.map_outlined),
                       border: OutlineInputBorder(),
+                      hintText: 'Contoh: Jawa Tengah',
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'customer', child: Text('Member')),
-                      DropdownMenuItem(value: 'trainer', child: Text('Trainer')),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _selectedRole = v);
+                    textCapitalization: TextCapitalization.words,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Provinsi wajib diisi';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Kota field
+                  TextFormField(
+                    controller: _kotaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Kota',
+                      prefixIcon: Icon(Icons.location_city_outlined),
+                      border: OutlineInputBorder(),
+                      hintText: 'Contoh: Purwokerto',
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Kota wajib diisi';
+                      return null;
                     },
                   ),
                   const SizedBox(height: 24),

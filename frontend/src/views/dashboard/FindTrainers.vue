@@ -72,9 +72,13 @@
           </div>
 
           <button @click="handleBooking(session.id)"
-                  :disabled="loadingBooking"
-                  class="w-full py-4 font-black uppercase text-xs tracking-widest rounded-2xl transition-all bg-red-500 text-black hover:bg-red-400 shadow-lg shadow-red-500/20">
+                  :disabled="loadingBooking || isBooked(session.id)"
+                  :class="isBooked(session.id)
+                    ? 'bg-green-500/20 text-green-500 border border-green-500/30 cursor-default'
+                    : 'bg-red-500 text-black hover:bg-red-400 shadow-lg shadow-red-500/20'"
+                  class="w-full py-4 font-black uppercase text-xs tracking-widest rounded-2xl transition-all">
             <span v-if="loadingBooking">Memproses...</span>
+            <span v-else-if="isBooked(session.id)">Sudah Dibooking ✓</span>
             <span v-else>Ambil Sesi →</span>
           </button>
         </div>
@@ -90,22 +94,28 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '../../utils/api'
 
-// Base URL for photos (strip /api suffix)
-const photoBaseUrl = api.defaults.baseURL.replace(/\/api$/, '')
+const photoBaseUrl = api.defaults.baseURL.replace(/\/api\/v1$/, '')
 
 const sessions = ref([])
 const loading = ref(true)
 const error = ref('')
 const loadingBooking = ref(false)
 const searchQuery = ref('')
+const myBookings = ref([])
+const loadingBookings = ref(false)
 
 const fetchData = async () => {
   loading.value = true
   error.value = ''
   try {
-    const response = await api.get('/sessions')
-    const data = response.data?.data || []
+    const [sessionsRes, bookingsRes] = await Promise.all([
+      api.get('/sessions'),
+      api.get('/bookings/my')
+    ])
+    const data = sessionsRes.data?.data || []
     sessions.value = Array.isArray(data) ? data : []
+    const bookingsData = bookingsRes.data?.data || bookingsRes.data || []
+    myBookings.value = Array.isArray(bookingsData) ? bookingsData : []
   } catch (err) {
     error.value = 'Gagal memuat data sesi'
     console.error('Fetch error:', err)
@@ -114,14 +124,37 @@ const fetchData = async () => {
   }
 }
 
+const bookedSessionIds = computed(() => {
+  return new Set(myBookings.value.map(b => b.session_id).filter(Boolean))
+})
+
+const isBooked = (sessionId) => bookedSessionIds.value.has(sessionId)
+
 const filteredSessions = computed(() => {
   if (!sessions.value.length) return []
-  return sessions.value.filter(s => {
-    const name = (s.trainer_name || '').toLowerCase()
-    const title = (s.title || '').toLowerCase()
-    const query = searchQuery.value.toLowerCase()
-    return name.includes(query) || title.includes(query)
-  })
+
+  // Hanya tampilkan sesi dari tanggal 27 Juni 2026 ke depan
+  const minDate = new Date('2026-06-27T00:00:00')
+
+  // Hanya 1 sesi per trainer (yang paling awal)
+  const seenTrainers = new Set()
+
+  return sessions.value
+    .filter(s => {
+      const start = new Date(s.start_time)
+      return start >= minDate
+    })
+    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+    .filter(s => {
+      const name = (s.trainer_nama || s.trainer_name || '').toLowerCase()
+      const title = (s.title || '').toLowerCase()
+      const query = searchQuery.value.toLowerCase()
+      const match = name.includes(query) || title.includes(query)
+      if (!match) return false
+      if (seenTrainers.has(s.trainer_id)) return false
+      seenTrainers.add(s.trainer_id)
+      return true
+    })
 })
 
 const formatRupiah = (price) => {
@@ -140,14 +173,15 @@ const formatTime = (dateStr) => {
 }
 
 const handleBooking = async (sessionId) => {
-  if (loadingBooking.value) return
+  if (loadingBooking.value || isBooked(sessionId)) return
   loadingBooking.value = true
   try {
     await api.post('/bookings', { session_id: sessionId })
     alert('Booking berhasil!')
     await fetchData()
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal melakukan booking')
+    const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Gagal melakukan booking'
+    alert(msg)
   } finally {
     loadingBooking.value = false
   }

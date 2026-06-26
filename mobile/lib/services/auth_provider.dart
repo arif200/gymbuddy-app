@@ -78,11 +78,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
           throw Exception(res['message'] ?? 'Gagal load profil');
         }
         final user = res['data'] ?? res['user'];
+
+        // Block trainer/admin dari mobile (mobile khusus customer)
+        if (user != null && user['role'] != 'customer') {
+          ApiService.setToken(null);
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('token');
+          state = state.copyWith(
+            isLoggedIn: false, token: null, user: null,
+            isAdmin: false, isTrainer: false,
+            isInitialized: true,
+          );
+          return;
+        }
+
         state = state.copyWith(
           user: user,
           isLoggedIn: true,
-          isAdmin: user?['role'] == 'admin',
-          isTrainer: user?['role'] == 'trainer',
+          isAdmin: false,
+          isTrainer: false,
           isInitialized: true,
         );
       } catch (e) {
@@ -105,23 +119,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      print('[AUTH_PROVIDER] Login start: $email');
       final res = await _api.login(email, password);
-      final token = res['token'] ?? res['data']?['token'];
-      final user = res['user'] ?? res['data']?['user'];
+      print('[AUTH_PROVIDER] Login result: $res');
+      final token = res['data']?['token'] ?? res['token'];
+      final user = res['data']?['user'] ?? res['user'];
 
-      if (token != null) {
-        // Set token di cache ApiService IMMEDIATELY (synchronous)
-        ApiService.setToken(token);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
+      if (token == null || res['success'] == false) {
+        final errMsg = res['message'] ?? 'Email atau password salah';
+        final errCode = res['code'] ?? res['error']?['code'];
+        print('[AUTH_PROVIDER] Login failed. errMsg=$errMsg errCode=$errCode');
+        state = state.copyWith(
+          isLoading: false,
+          error: errMsg,
+        );
+        // If email not verified, navigate to OTP
+        if (errCode == 'EMAIL_NOT_VERIFIED' && mounted) {
+          state = state.copyWith(error: errMsg);
+        }
+        return;
+      }
+
+      // Set token di cache ApiService IMMEDIATELY (synchronous)
+      ApiService.setToken(token);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+
+      // Block trainer/admin dari login di mobile (mobile khusus customer)
+      if (user != null && user['role'] != 'customer') {
+        ApiService.setToken(null);
+        await prefs.remove('token');
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Akun ${user?['role'] == 'admin' ? 'admin' : 'trainer'} tidak dapat digunakan di aplikasi mobile. Silakan login melalui website.',
+        );
+        return;
       }
 
       state = state.copyWith(
         isLoggedIn: true,
         token: token,
         user: user,
-        isAdmin: user?['role'] == 'admin',
-        isTrainer: user?['role'] == 'trainer',
+        isAdmin: false,
+        isTrainer: false,
         isLoading: false,
       );
     } catch (e) {
@@ -132,27 +172,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> register(Map<String, dynamic> data) async {
+  Future<String?> register(Map<String, dynamic> data) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _api.register(data);
+      print('[AUTH_PROVIDER] Register start: ${data['email']}');
+      final res = await _api.register(data);
+      print('[AUTH_PROVIDER] Register result: $res');
+      if (res['success'] == false) {
+        state = state.copyWith(
+          isLoading: false,
+          error: res['message'] ?? 'Registrasi gagal. Coba lagi.',
+        );
+        return null;
+      }
       state = state.copyWith(isLoading: false, error: null);
-      return true;
+      final email = res['data']?['email'] ?? data['email'] as String?;
+      print('[AUTH_PROVIDER] Register returning email: $email');
+      return email;
     } catch (e) {
+      print('[AUTH_PROVIDER] Register exception: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Registrasi gagal. Coba lagi.',
       );
-      return false;
+      return null;
     }
   }
 
   Future<void> _logout() async {
-    // Clear cached token di ApiService (synchronous, langsung生效)
     ApiService.setToken(null);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-    state = const AuthState();
+    state = const AuthState(isInitialized: true);
   }
 
   Future<void> logout() => _logout();

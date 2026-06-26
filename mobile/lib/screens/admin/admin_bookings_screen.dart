@@ -35,10 +35,10 @@ class _AdminBookingsScreenState extends ConsumerState<AdminBookingsScreen> {
 
   Color _statusColor(String? status) {
     switch (status) {
-      case 'Confirmed': return Colors.green;
-      case 'Pending': return Colors.orange;
-      case 'Cancel': return Colors.red;
-      case 'Completed': return Colors.blue;
+      case 'confirmed': return Colors.green;
+      case 'pending': return Colors.orange;
+      case 'cancelled': return Colors.red;
+      case 'completed': return Colors.blue;
       default: return Colors.grey;
     }
   }
@@ -55,7 +55,7 @@ class _AdminBookingsScreenState extends ConsumerState<AdminBookingsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.all(8),
             child: Row(
-              children: ['All', 'Pending', 'Confirmed', 'Completed', 'Cancel'].map((s) {
+              children: ['All', 'pending', 'confirmed', 'completed', 'cancelled'].map((s) {
                 final isActive = (s == 'All' && _statusFilter == null) || _statusFilter == s;
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -79,14 +79,14 @@ class _AdminBookingsScreenState extends ConsumerState<AdminBookingsScreen> {
                       itemCount: _bookings.length,
                       itemBuilder: (ctx, i) {
                         final b = _bookings[i];
-                        final date = b['datetime_created'] != null
-                          ? DateFormat('dd/MM/yy HH:mm').format(DateTime.parse(b['datetime_created']))
+                        final date = b['createdAt'] != null
+                          ? DateFormat('dd/MM/yy HH:mm').format(DateTime.parse(b['createdAt']).toLocal())
                           : '';
                         return Card(
                           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           child: ListTile(
                             title: Text(b['session_title'] ?? 'Sesi'),
-                            subtitle: Text('${b['member_name'] ?? ''}  •  $date'),
+                            subtitle: Text('${b['member_nama'] ?? ''}  •  $date'),
                             trailing: Chip(
                               label: Text(b['status'] ?? '', style: const TextStyle(fontSize: 11, color: Colors.white)),
                               backgroundColor: _statusColor(b['status']),

@@ -124,13 +124,13 @@ const handleSubmit = async () => {
     }
     showForm.value = false
     fetchData()
-  } catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  } catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 const deleteArticle = async (id) => {
   if (!confirm('Yakin?')) return
   try { await api.delete(`/articles/${id}`); fetchData() }
-  catch (err) { alert(err.response?.data?.message || 'Gagal') }
+  catch (err) { alert(err.response?.data?.error?.message || err.response?.data?.message || 'Gagal') }
 }
 
 onMounted(fetchData)

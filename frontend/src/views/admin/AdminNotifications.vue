@@ -147,27 +147,33 @@ const fetchData = async () => {
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('id-ID', {
+  let str = dateStr.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const d = new Date(str)
+  if (isNaN(d.getTime())) return '-'
+  return d.toLocaleDateString('id-ID', {
     day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta'
   })
 }
 
-const openSendForm = () => {
-  sendForm.value = { user_id: null, title: '', message: '', type: 'system' }
-  showSendForm.value = true
-}
-
-const handleSend = async () => {
-  sending.value = true
+const markAsRead = async (id) => {
   try {
-    await api.post('/notifications/send', sendForm.value)
-    showSendForm.value = false
+    await api.patch(`/notifications/${id}/read`)
     fetchData()
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal mengirim notifikasi')
-  } finally {
-    sending.value = false
+    alert(err.response?.data?.error?.message || 'Gagal menandai notifikasi')
+  }
+}
+
+const markAllAsRead = async () => {
+  try {
+    await api.patch('/notifications/read-all')
+    fetchData()
+  } catch (err) {
+    alert(err.response?.data?.error?.message || 'Gagal')
   }
 }
 
@@ -177,7 +183,7 @@ const deleteNotification = async (id) => {
     await api.delete(`/notifications/${id}`)
     notifications.value = notifications.value.filter(n => n.id !== id)
   } catch (err) {
-    alert(err.response?.data?.message || 'Gagal menghapus')
+    alert(err.response?.data?.error?.message || 'Gagal menghapus')
   }
 }
 

@@ -36,14 +36,14 @@
             </div>
             
             <router-link :to="`/dashboard/profile/edit/${user.id}`" class="inline-block bg-red-500 text-black px-5 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:bg-red-400">
-              Edit Profile
+              Edit Profil
             </router-link>
           </div>
         </div>
       </div>
       
       <div class="bg-[#161920] p-8 rounded-[2rem] border border-gray-900">
-        <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-6">Detailed Information</h3>
+        <h3 class="font-black uppercase text-[10px] tracking-[0.2em] text-gray-500 mb-6">Informasi Detail</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div v-for="(val, label) in infoFields" :key="label">
             <p class="text-[9px] uppercase font-bold text-red-500 tracking-widest mb-1">{{ label }}</p>
@@ -66,7 +66,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import api from '../../utils/api'
+import { useAuthStore } from '../../stores/authStore'
 
+const authStore = useAuthStore()
 const user = ref({ id: '', nama: '', email: '', role: '', kota: '', propinsi: '', foto: '' })
 const photoUrl = ref('')
 const uploading = ref(false)
@@ -79,22 +81,27 @@ const showToast = (message, type = 'success') => {
 }
 
 const infoFields = computed(() => ({
-  "Full Name": user.value.nama,
-  "Email Address": user.value.email,
-  "Current City": user.value.kota,
-  "Province": user.value.propinsi,
-  "Account Role": user.value.role
+  "Nama Lengkap": user.value.nama,
+  "Alamat Email": user.value.email,
+  "Kota Saat Ini": user.value.kota,
+  "Provinsi": user.value.propinsi,
+  "Role Akun": user.value.role
 }))
 
-const photoBaseUrl = api.defaults.baseURL.replace(/\/api$/, '')
+const photoBaseUrl = api.defaults.baseURL.replace(/\/api\/v1$/, '')
+
+const syncUser = (data) => {
+  user.value = data
+  if (data.foto) {
+    photoUrl.value = `${photoBaseUrl}/${data.foto}`
+  }
+}
 
 const fetchUserProfile = async () => {
   try {
-    const response = await api.get('/auth/me')
-    const data = response.data
-    user.value = data
-    if (data.foto) {
-      photoUrl.value = `${photoBaseUrl}/${data.foto}`
+    await authStore.init()
+    if (authStore.user) {
+      syncUser(authStore.user)
     }
   } catch (error) {
     console.error("Gagal ambil data:", error)
@@ -139,6 +146,10 @@ const handleFileSelect = async (e) => {
     if (fotoPath) {
       photoUrl.value = `${photoBaseUrl}/${fotoPath}`
       user.value.foto = fotoPath
+      // Sync ke authStore agar semua view (termasuk profile page) pakai foto baru
+      if (authStore.user) {
+        authStore.setUser({ ...authStore.user, foto: fotoPath })
+      }
       showToast('Foto profil berhasil diperbarui!', 'success')
     }
   } catch (err) {

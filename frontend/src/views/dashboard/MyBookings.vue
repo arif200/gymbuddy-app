@@ -35,7 +35,7 @@
           </h3>
           
           <div class="space-y-4">
-            <div v-for="booking in activeBookings" :key="booking.booking_id" 
+            <div v-for="booking in activeBookings" :key="booking.id" 
                  class="bg-[#0f1115] p-5 rounded-3xl border border-gray-900 hover:border-red-500/20 transition-all group flex items-center justify-between">
               <div class="flex items-center gap-5">
                 <div class="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -55,15 +55,15 @@
                     {{ booking.trainer_name }}
                   </h4>
                   <div class="flex items-center gap-4 mt-1">
-                    <span class="text-[10px] text-gray-500 font-bold uppercase">📅 {{ formatDate(booking.start_time) }}</span>
-                    <span class="text-[10px] text-gray-500 font-bold uppercase">🕒 {{ formatTime(booking.start_time) }}</span>
+                    <span class="text-[10px] text-gray-500 font-bold uppercase">📅 {{ formatDate(booking.session_start_time) }}</span>
+                    <span class="text-[10px] text-gray-500 font-bold uppercase">🕒 {{ formatTime(booking.session_start_time) }}</span>
                     <span class="text-[10px] text-red-500/80 font-bold uppercase">💪 {{ booking.session_title }}</span>
                   </div>
                 </div>
               </div>
               <div class="flex items-center gap-3">
                 <div class="text-right">
-                  <p class="text-sm font-black text-white">{{ formatRupiah(booking.payment_amount || booking.price) }}</p>
+                  <p class="text-sm font-black text-white">{{ formatRupiah(booking.payment_amount || booking.session_price) }}</p>
                   <!-- Status Badge -->
                   <span v-if="booking.payment_status === 'settlement'" class="badge-success">✓ LUNAS</span>
                   <span v-else-if="booking.payment_status === 'pending'" class="badge-pending">⏳ MENUNGGU</span>
@@ -72,18 +72,18 @@
                 </div>
                 <!-- Pay Now button -->
                 <button 
-                  v-if="booking.payment_status === 'pending' || (booking.status === 'Pending' && !booking.payment_status)"
-                  @click="handlePay(booking.booking_id)"
-                  :disabled="payingId === booking.booking_id"
+                  v-if="booking.payment_status === 'pending' || (booking.status === 'pending' && !booking.payment_status)"
+                  @click="handlePay(booking.id)"
+                  :disabled="payingId === booking.id"
                   class="bg-red-500 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50">
-                  {{ payingId === booking.booking_id ? '...' : 'Bayar' }}
+                  {{ payingId === booking.id ? '...' : 'Bayar' }}
                 </button>
                 <button 
-                  v-else-if="booking.status === 'Pending'"
-                  @click="handleCancel(booking.booking_id)"
-                  :disabled="isCancelling === booking.booking_id"
+                  v-else-if="booking.status === 'pending'"
+                  @click="handleCancel(booking.id)"
+                  :disabled="isCancelling === booking.id"
                   class="bg-red-500/10 text-red-500 border border-red-500/20 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-red-500 hover:text-white transition-all active:scale-95 disabled:opacity-50">
-                  {{ isCancelling === booking.booking_id ? '...' : 'Batalkan' }}
+                  {{ isCancelling === booking.id ? '...' : 'Batalkan' }}
                 </button>
               </div>
             </div>
@@ -100,7 +100,7 @@
           </h3>
           
           <div class="space-y-4 opacity-70 hover:opacity-100 transition-opacity">
-            <div v-for="past in pastBookings" :key="past.booking_id" 
+            <div v-for="past in pastBookings" :key="past.id" 
                  class="bg-[#0a0a0a] p-5 rounded-3xl border border-gray-900 flex items-center justify-between grayscale-[0.5] hover:grayscale-0 transition-all">
               <div class="flex items-center gap-5">
                 <div class="w-12 h-12 bg-gray-800 rounded-2xl flex items-center justify-center text-gray-400 font-black text-sm border border-gray-700 uppercase">
@@ -109,7 +109,7 @@
                 <div>
                   <h4 class="font-bold text-gray-300 uppercase">{{ past.trainer_name }}</h4>
                   <p class="text-[10px] text-gray-600 font-bold uppercase mt-1">
-                    {{ past.status }} • {{ formatDate(past.start_time) }} • {{ past.session_title }}
+                    {{ past.status }} • {{ formatDate(past.session_start_time) }} • {{ past.session_title }}
                   </p>
                 </div>
               </div>
@@ -134,7 +134,7 @@ import { ref, onMounted, computed } from 'vue'
 import api from '../../utils/api'
 
 // Base URL for photos (strip /api suffix)
-const photoBaseUrl = api.defaults.baseURL.replace(/\/api$/, '')
+const photoBaseUrl = api.defaults.baseURL.replace(/\/api\/v1$/, '')
 const bookings = ref([])
 const loading = ref(true)
 const error = ref('')
@@ -151,16 +151,16 @@ const showToast = (message, type = 'success') => {
 const activeBookings = computed(() => {
   if (!Array.isArray(bookings.value)) return []
   return bookings.value.filter(b => 
-    b.status === 'Confirmed' || b.status === 'Pending'
+    b.status === 'confirmed' || b.status === 'pending'
   )
 })
 
 const upcomingBookings = computed(() => {
-  return activeBookings.value.filter(b => b.status === 'Confirmed')
+  return activeBookings.value.filter(b => b.status === 'confirmed')
 })
 
 const pendingPayment = computed(() => {
-  return activeBookings.value.filter(b => b.payment_status === 'pending' || (b.status === 'Pending' && !b.payment_status))
+  return activeBookings.value.filter(b => b.payment_status === 'pending' || (b.status === 'pending' && !b.payment_status))
 })
 
 const paidBookings = computed(() => {
@@ -169,7 +169,7 @@ const paidBookings = computed(() => {
 
 const pastBookings = computed(() => {
   if (!Array.isArray(bookings.value)) return []
-  return bookings.value.filter(b => b.status === 'Cancel' || b.status === 'Completed')
+  return bookings.value.filter(b => b.status === 'cancelled' || b.status === 'completed')
 })
 
 const fetchMyBookings = async () => {
@@ -183,6 +183,18 @@ const fetchMyBookings = async () => {
     error.value = 'Gagal memuat data booking'
   } finally {
     loading.value = false
+  }
+}
+
+const verifyPaymentStatus = async (bookingId, retries = 3) => {
+  try {
+    await api.get(`/payments/${bookingId}/status`)
+  } catch (err) {
+    console.error('Gagal verifikasi status pembayaran:', err)
+  }
+  // Retry untuk menunggu Midtrans update status menjadi settlement
+  if (retries > 0) {
+    setTimeout(() => verifyPaymentStatus(bookingId, retries - 1), 2000)
   }
 }
 
@@ -218,23 +230,28 @@ const handlePay = async (bookingId) => {
     // 5. Buat callback untuk Snap
     window.snap.pay(token, {
       onSuccess: async () => {
-        showToast('Pembayaran berhasil! Sesi Anda sudah dikonfirmasi.')
+        showToast('Pembayaran berhasil! Memverifikasi status...')
+        // Cek status ke Midtrans lewat backend karena notifikasi tidak sampai ke localhost
+        await verifyPaymentStatus(bookingId)
         await fetchMyBookings()
       },
-  onPending: () => {
+      onPending: () => {
         showToast('Pembayaran sedang diproses.')
+        verifyPaymentStatus(bookingId)
         fetchMyBookings()
       },
-  onError: () => {
+      onError: () => {
         showToast('Pembayaran gagal. Silakan coba lagi.', 'error')
+        verifyPaymentStatus(bookingId)
         fetchMyBookings()
       },
-  onClose: () => {
+      onClose: () => {
+        verifyPaymentStatus(bookingId)
         fetchMyBookings()
       }
     })
   } catch (err) {
-    const msg = err.response?.data?.message || 'Gagal memproses pembayaran'
+    const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Gagal memproses pembayaran'
     showToast(msg, 'error')
   } finally {
     payingId.value = null
@@ -245,7 +262,7 @@ const handleCancel = async (bookingId) => {
   if (!confirm('Yakin ingin membatalkan booking ini?')) return
   isCancelling.value = bookingId
   try {
-    await api.patch(`/bookings/${bookingId}/status`, { status: 'Cancel' })
+    await api.patch(`/bookings/${bookingId}/status`, { status: 'cancelled' })
     showToast('Booking berhasil dibatalkan')
     await fetchMyBookings()
   } catch (err) {

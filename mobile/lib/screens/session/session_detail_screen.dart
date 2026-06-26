@@ -17,6 +17,7 @@ class SessionDetailScreen extends ConsumerStatefulWidget {
 class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   final _api = ApiService();
   Map<String, dynamic>? _session;
+  List<dynamic> _myBookings = [];
   bool _isLoading = true;
   String? _error;
   bool _isBooking = false;
@@ -24,20 +25,43 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSession();
+    _loadData();
   }
 
-  Future<void> _loadSession() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final res = await _api.getSessionDetail(widget.sessionId);
-    if (res['success'] == true || res['data'] != null) {
-      setState(() { _session = res['data'] ?? res; _isLoading = false; });
+    final results = await Future.wait([
+      _api.getSessionDetail(widget.sessionId),
+      _api.getMyBookings(),
+    ]);
+    final sessionRes = results[0];
+    final bookingsRes = results[1];
+    if (sessionRes['success'] == true || sessionRes['data'] != null) {
+      _session = sessionRes['data'] ?? sessionRes;
     } else {
-      setState(() { _error = res['message'] ?? 'Gagal memuat detail sesi'; _isLoading = false; });
+      _error = sessionRes['message'] ?? 'Gagal memuat detail sesi';
     }
+    _myBookings = (bookingsRes['data'] as List?) ?? [];
+    setState(() => _isLoading = false);
+  }
+
+  bool get _isAlreadyBooked {
+    return _myBookings.any((b) =>
+      b['session_id'] == widget.sessionId &&
+      b['status'] != 'cancelled',
+    );
   }
 
   Future<void> _bookSession() async {
+    if (_isAlreadyBooked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda sudah booking sesi ini'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     setState(() => _isBooking = true);
     final res = await _api.createBooking(widget.sessionId);
     setState(() => _isBooking = false);
@@ -51,7 +75,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(res['message'] ?? 'Gagal booking'), backgroundColor: Colors.red[700]),
+          SnackBar(
+            content: Text(res['message'] ?? 'Gagal booking'),
+            backgroundColor: Colors.red[700],
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     }
@@ -59,7 +87,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
   String _formatDate(String? dateStr) {
     if (dateStr == null) return 'TBD';
-    final dt = DateTime.parse(dateStr);
+    final dt = DateTime.parse(dateStr).toLocal();
     return '${DateFormat('EEEE, dd MMM yyyy', 'id').format(dt)}  •  ${DateFormat('HH:mm').format(dt)}';
   }
 
@@ -103,32 +131,35 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                           const Divider(),
                           _trainerPhotoRow(_session?['trainer_photo'] ?? '', _session?['trainer_name'] ?? ''),
                           const Divider(),
-                          _infoRow(Icons.people, 'Max Peserta', '${_session?['max_participants'] ?? 1} orang'),
-                          const Divider(),
                           _infoRow(Icons.money, 'Harga', 'Rp${_formatRupiah(_session?['price'] ?? 0)}'),
                         ],
                       ),
                     ),
                   ),
-                  if (_session?['deskripsi'] != null) ...[
+                  if (_session?['description'] != null) ...[
                     const SizedBox(height: 20),
                     Text('Deskripsi', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Text(_session!['deskripsi'], style: TextStyle(color: Colors.grey[700], height: 1.5)),
+                    Text(_session!['description'], style: TextStyle(color: Colors.grey[700], height: 1.5)),
                   ],
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: _isBooking ? null : _bookSession,
+                      onPressed: _isAlreadyBooked || _isBooking ? null : _bookSession,
                       icon: _isBooking
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.calendar_today),
-                      label: Text(_isBooking ? 'Memproses...' : 'Ambil Sesi Ini'),
+                      label: Text(_isBooking
+                        ? 'Memproses...'
+                        : _isAlreadyBooked
+                          ? 'Sudah Booking'
+                          : 'Ambil Sesi Ini'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
+                        backgroundColor: _isAlreadyBooked ? Colors.green[600] : theme.colorScheme.primary,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: _isAlreadyBooked ? Colors.green[600] : theme.colorScheme.primary.withAlpha(120),
                         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -154,7 +185,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 
   Widget _trainerPhotoRow(String trainerPhoto, String trainerName) {
-    final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
+    final baseUrl = ApiService.photoBaseUrl;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -173,7 +204,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       height: 40,
                       color: Theme.of(context).colorScheme.primary.withAlpha(25),
                       child: Center(
-                        child: Text(trainerName[0].toUpperCase(), style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
+                        child: Text(trainerName.isNotEmpty ? trainerName[0].toUpperCase() : 'T', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
                     ),
                   )

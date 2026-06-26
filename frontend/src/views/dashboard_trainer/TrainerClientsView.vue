@@ -17,7 +17,7 @@
         <table class="w-full text-left">
           <thead>
             <tr class="bg-black/20">
-              <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Member</th>
+              <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Anggota</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest">Detail Sesi</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center">Status</th>
               <th class="py-5 px-8 text-[10px] font-black text-gray-600 uppercase tracking-widest text-center">Aksi</th>
@@ -27,28 +27,28 @@
             <tr v-if="loading">
               <td colspan="4" class="py-20 text-center text-red-500 font-black text-xs animate-pulse uppercase tracking-widest">Menghubungkan ke Database...</td>
             </tr>
-            <tr v-for="booker in filteredBookers" :key="booker.booking_id" class="border-b border-gray-900/50 hover:bg-white/[0.02]">
+            <tr v-for="booker in filteredBookers" :key="booker.id" class="border-b border-gray-900/50 hover:bg-white/[0.02]">
               <td class="py-6 px-8">
                 <div class="flex items-center gap-4">
                   <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center font-black text-red-500 text-xs">
-                    {{ getInitials(booker.customer_name) }}
+                    {{ getInitials(booker.member_nama) }}
                   </div>
                   <div>
-                    <p class="text-xs font-black uppercase">{{ booker.customer_name || 'Member' }}</p>
-                    <p class="text-[9px] text-gray-600 lowercase">{{ booker.customer_email || '-' }}</p>
+                    <p class="text-xs font-black uppercase">{{ booker.member_nama || 'Anggota' }}</p>
+                    <p class="text-[9px] text-gray-600 lowercase">{{ booker.member_email || '-' }}</p>
                   </div>
                 </div>
               </td>
               
               <td class="py-6 px-8">
-                <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'General Session' }}</p>
-                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.start_time) }}</p>
+                <p class="text-[10px] text-gray-200 font-black uppercase italic">{{ booker.session_title || 'Sesi Umum' }}</p>
+                <p class="text-[9px] text-gray-600 font-bold mt-1 uppercase">{{ formatDate(booker.session_start_time, booker.session_end_time) }}</p>
               </td>
 
               <td class="py-6 px-8 text-center">
                 <span :class="getStatusClass(booker.status)"
                       class="text-[8px] px-4 py-1.5 rounded-full border font-black uppercase tracking-widest inline-block">
-                  {{ booker.status || 'Pending' }}
+                  {{ statusLabel(booker.status) }}
                 </span>
               </td>
               <td class="py-6 px-8 text-center">
@@ -67,7 +67,7 @@
     <div v-if="showModal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-50">
       <div class="bg-[#161920] border border-gray-900 w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
         <h2 class="text-xl font-black uppercase italic mb-1">Catat Progress</h2>
-        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Member: {{ selectedMember?.customer_name }}</p>
+        <p class="text-[10px] text-gray-500 font-bold uppercase mb-6 tracking-widest">Anggota: {{ selectedMember?.member_nama }}</p>
         <form @submit.prevent="saveProgress" class="space-y-4">
           <div>
             <label class="text-[9px] font-black uppercase text-gray-600 mb-2 block tracking-widest">Aktivitas</label>
@@ -108,23 +108,51 @@ const progressForm = ref({ activity: '', duration: 30, note: '' })
 const filteredBookers = computed(() => {
   if (!searchQuery.value) return bookers.value
   return bookers.value.filter(b => 
-    (b.customer_name || '').toLowerCase().includes(searchQuery.value.toLowerCase())
+    (b.member_nama || '').toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
 
 const getInitials = (n) => n ? n.split(' ').map(i => i[0]).join('').toUpperCase().slice(0, 2) : 'M'
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', {day:'numeric', month:'short'}) : '--'
+
+const toUTCDate = (d) => {
+  if (!d) return null
+  let str = d.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const date = new Date(str)
+  return isNaN(date.getTime()) ? null : date
+}
+
+const TZ = 'Asia/Jakarta'
+
+const formatDate = (startStr, endStr) => {
+  const start = toUTCDate(startStr)
+  if (!start) return '--'
+  const datePart = start.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: TZ })
+  const startTime = start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
+  const end = toUTCDate(endStr)
+  if (end) {
+    return `${datePart} • ${startTime} - ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: TZ })}`
+  }
+  return `${datePart} • ${startTime}`
+}
 
 const getStatusClass = (status) => {
-  if (status === 'Pending') return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
-  if (status === 'Cancel') return 'bg-red-400/10 text-red-400 border-red-400/20'
-  return 'bg-red-500/10 text-red-500 border-red-500/20'
+  if (status === 'pending') return 'bg-yellow-400/10 text-yellow-400 border-yellow-400/20'
+  if (status === 'cancelled') return 'bg-red-400/10 text-red-400 border-red-400/20'
+  return 'bg-green-500/10 text-green-500 border-green-500/20'
+}
+
+const statusLabel = (status) => {
+  const map = { pending: 'Menunggu', confirmed: 'Dikonfirmasi', cancelled: 'Dibatalkan', completed: 'Selesai' }
+  return map[status?.toLowerCase()] || 'Menunggu'
 }
 
 const fetchBookers = async () => {
   loading.value = true
   try {
-    const res = await api.get('/views/customer-booking-history')
+    const res = await api.get('/bookings/my')
     const rawData = res.data?.data || []
     bookers.value = Array.isArray(rawData) ? rawData : []
   } catch (err) {
@@ -143,7 +171,7 @@ const openModal = (booker) => {
 const saveProgress = async () => {
   try {
     await api.post('/progress', {
-      booking_id: selectedMember.value.booking_id,
+      booking_id: selectedMember.value.id,
       activity: progressForm.value.activity,
       duration: progressForm.value.duration,
       note: progressForm.value.note

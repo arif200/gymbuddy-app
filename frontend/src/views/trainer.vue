@@ -85,7 +85,7 @@
 
       <div class="overflow-hidden">
         <img 
-          src="/src/assets/trainer-2.jpeg"
+          src="/src/assets/trainer-fadhel.jpeg"
           class="w-full h-64 object-cover group-hover:scale-110 transition duration-500 " style="object-position: 50% 20%;"
         />
       </div>
@@ -102,7 +102,7 @@
 
       <div class="overflow-hidden">
         <img 
-          src="/src/assets/trainer-1.jpeg"
+          src="/src/assets/trainer-arif.jpeg"
           class="w-full h-64 object-cover group-hover:scale-110 transition duration-500 object-top"
         />
       </div>
@@ -119,7 +119,7 @@
 
       <div class="overflow-hidden">
         <img 
-          src="/src/assets/trainer-3.jpeg"
+          src="/src/assets/trainer-gusti.jpeg"
           class="w-full h-64 object-cover group-hover:scale-110 transition duration-500"
         />
       </div>

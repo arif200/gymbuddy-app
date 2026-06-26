@@ -206,20 +206,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _buildBookingItem(dynamic booking, ThemeData theme) {
     final title = booking['session_title'] ?? 'Sesi';
-    final memberName = booking['member_name'] ?? 'Member';
+    final memberName = booking['member_nama'] ?? 'Member';
     final status = booking['status'] ?? '';
-    final date = booking['start_time'] != null
-        ? DateFormat('dd MMM').format(DateTime.parse(booking['start_time']))
+    final date = booking['session_start_time'] != null
+        ? DateFormat('dd MMM').format(DateTime.parse(booking['session_start_time']).toLocal())
         : '--';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: status == 'Confirmed' ? Colors.green[100] : Colors.orange[100],
+          backgroundColor: status == 'confirmed' ? Colors.green[100] : Colors.orange[100],
           child: Icon(
-            status == 'Confirmed' ? Icons.check_circle : Icons.pending,
-            color: status == 'Confirmed' ? Colors.green[700] : Colors.orange[700],
+            status == 'confirmed' ? Icons.check_circle : Icons.pending,
+            color: status == 'confirmed' ? Colors.green[700] : Colors.orange[700],
             size: 20,
           ),
         ),
@@ -274,15 +274,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     Color textColor;
 
     switch (status) {
-      case 'Confirmed':
+      case 'confirmed':
         bgColor = Colors.green[50]!;
         textColor = Colors.green[700]!;
         break;
-      case 'Cancel':
+      case 'cancelled':
         bgColor = Colors.red[50]!;
         textColor = Colors.red[700]!;
         break;
-      case 'Completed':
+      case 'completed':
         bgColor = Colors.blue[50]!;
         textColor = Colors.blue[700]!;
         break;

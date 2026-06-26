@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'midtrans_webview_screen.dart';
 import '../../services/api_service.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
@@ -31,28 +31,49 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   String? _paymentStatus;
   String? _orderId;
 
-  @override
-  void initState() {
-    super.initState();
-    _initPayment();
-  }
-
-  Future<void> _initPayment() async {
+  Future<void> _initPayment({bool isRetry = false}) async {
     setState(() {
       _isProcessing = true;
       _error = null;
     });
-    final res = await _api.createPayment(widget.bookingId);
-    if (res['data'] != null) {
+    try {
+      final res = await _api.createPayment(widget.bookingId);
+      print('CREATE PAYMENT response: $res');
+      if (res['success'] == false) {
+        if (!isRetry) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) return _initPayment(isRetry: true);
+        }
+        setState(() {
+          _error = res['message'] ?? 'Gagal memproses pembayaran';
+          _isProcessing = false;
+        });
+        return;
+      }
       final data = res['data'];
+      if (data == null || data['redirect_url'] == null) {
+        if (!isRetry) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) return _initPayment(isRetry: true);
+        }
+        setState(() {
+          _error = res['message'] ?? 'URL pembayaran tidak tersedia';
+          _isProcessing = false;
+        });
+        return;
+      }
       setState(() {
         _paymentUrl = data['redirect_url'];
         _orderId = data['order_id'];
         _isProcessing = false;
       });
-    } else {
+    } catch (e) {
+      if (!isRetry) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) return _initPayment(isRetry: true);
+      }
       setState(() {
-        _error = res['message'] ?? 'Gagal memproses pembayaran';
+        _error = 'Terjadi kesalahan: $e';
         _isProcessing = false;
       });
     }
@@ -60,25 +81,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Future<void> _openPaymentUrl() async {
     if (_paymentUrl == null) return;
-    final uri = Uri.parse(_paymentUrl!);
-
-    // Use inAppWebView for Midtrans payment
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.inAppWebView);
-      if (!mounted) return;
-
-      // After returning from Midtrans webview, check payment status
-      await _checkPaymentStatus();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal membuka halaman pembayaran'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MidtransWebViewScreen(
+          paymentUrl: _paymentUrl!,
+          finishUrl: 'https://gymbuddy.site/dashboard/my-bookings',
+          onFinish: _checkPaymentStatus,
+        ),
+      ),
+    );
+    // Saat user menutup WebView (tombol close/back), cek status juga
+    _checkPaymentStatus();
   }
 
   Future<void> _checkPaymentStatus() async {
@@ -97,7 +110,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           _paymentStatus = paymentStatus;
         });
 
-        if (paymentStatus == 'settlement' || bookingStatus == 'Confirmed') {
+        if (paymentStatus == 'settlement' || bookingStatus == 'confirmed') {
           setState(() => _paymentDone = true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -272,6 +285,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   // Action Buttons
                   if (!_paymentDone && _paymentUrl != null) ...[
+
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -325,6 +339,39 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       onPressed: () => context.pop(true),
                       child: const Text('Bayar Nanti'),
                     ),
+                  ],
+
+                  if (!_paymentDone && _paymentUrl == null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange[200]!),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.orange[700], size: 32),
+                          const SizedBox(height: 8),
+                          Text(
+                            _error ?? 'URL pembayaran tidak tersedia',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.orange[800]),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: _initPayment,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange[700],
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                   ],
 
                   if (_paymentDone) ...[

@@ -50,7 +50,7 @@ class _TrainerClientsScreenState extends ConsumerState<TrainerClientsScreen> {
     if (_searchController.text.isEmpty) return _clients;
     final q = _searchController.text.toLowerCase();
     return _clients.where((c) {
-      final name = (c['customer_name'] ?? c['member_name'] ?? '').toString().toLowerCase();
+      final name = (c['member_nama'] ?? '').toString().toLowerCase();
       final session = (c['session_title'] ?? '').toString().toLowerCase();
       return name.contains(q) || session.contains(q);
     }).toList();
@@ -145,20 +145,20 @@ class _TrainerClientsScreenState extends ConsumerState<TrainerClientsScreen> {
   }
 
   Widget _buildClientCard(dynamic client, ThemeData theme) {
-    final name = client['customer_name'] ?? client['member_name'] ?? client['trainer_name'] ?? 'Member';
+    final name = client['member_nama'] ?? 'Member';
     final sessionTitle = client['session_title'] ?? 'Sesi';
-    final startTime = client['start_time'] != null
-        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(client['start_time']))
+    final startTime = client['session_start_time'] != null
+        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(client['session_start_time']).toLocal())
         : '--';
-    final status = client['status'] ?? 'Pending';
-    final email = client['customer_email'] ?? client['email'] ?? '';
+    final status = client['status'] ?? 'pending';
+    final email = client['member_email'] ?? '';
 
     MaterialColor statusColor;
     switch (status) {
-      case 'Confirmed':
+      case 'confirmed':
         statusColor = Colors.green;
         break;
-      case 'Pending':
+      case 'pending':
         statusColor = Colors.orange;
         break;
       default:

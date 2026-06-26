@@ -184,7 +184,7 @@ class _TrainerDashboardScreenState extends ConsumerState<TrainerDashboardScreen>
   Widget _buildSessionCard(dynamic session, ThemeData theme) {
     final title = session['title'] ?? 'Sesi';
     final date = session['start_time'] != null
-        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(session['start_time']))
+        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(session['start_time']).toLocal())
         : '--';
     final price = session['price'] ?? 0;
 

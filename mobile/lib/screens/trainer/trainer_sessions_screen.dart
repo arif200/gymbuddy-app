@@ -90,11 +90,11 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
   Future<void> _showSessionForm({dynamic session}) async {
     final isEdit = session != null;
     final titleController = TextEditingController(text: isEdit ? session['title'] : '');
-    final descController = TextEditingController(text: isEdit ? session['deskripsi'] : '');
+    final descController = TextEditingController(text: isEdit ? session['description'] : '');
     final priceController = TextEditingController(text: isEdit ? (session['price'] ?? 0).toString() : '150000');
     
-    DateTime? startTime = isEdit && session['start_time'] != null ? DateTime.parse(session['start_time']) : null;
-    DateTime? endTime = isEdit && session['end_time'] != null ? DateTime.parse(session['end_time']) : null;
+    DateTime? startTime = isEdit && session['start_time'] != null ? DateTime.parse(session['start_time']).toLocal() : null;
+    DateTime? endTime = isEdit && session['end_time'] != null ? DateTime.parse(session['end_time']).toLocal() : null;
 
     final formKey = GlobalKey<FormState>();
 
@@ -196,10 +196,9 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
                     
                     final payload = {
                       'title': titleController.text.trim(),
-                      'deskripsi': descController.text.trim(),
-                      'trainer_id': ref.read(authProvider).user?['id'],
-                      'start_time': DateFormat('yyyy-MM-dd HH:mm:ss').format(startTime!),
-                      'end_time': endTime != null ? DateFormat('yyyy-MM-dd HH:mm:ss').format(endTime!) : null,
+                      'description': descController.text.trim(),
+                      'start_time': startTime!.toIso8601String(),
+                      'end_time': endTime?.toIso8601String(),
                       'price': double.tryParse(priceController.text) ?? 0,
                     };
 
@@ -348,10 +347,10 @@ class _TrainerSessionsScreenState extends ConsumerState<TrainerSessionsScreen> {
     final price = session['price'] ?? 0;
     final status = session['status'] ?? 'scheduled';
     final startTime = session['start_time'] != null
-        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(session['start_time']))
+        ? DateFormat('dd MMM yyyy, HH:mm').format(DateTime.parse(session['start_time']).toLocal())
         : '--';
     final endTime = session['end_time'] != null
-        ? DateFormat('HH:mm').format(DateTime.parse(session['end_time']))
+        ? DateFormat('HH:mm').format(DateTime.parse(session['end_time']).toLocal())
         : '--';
     final bookings = session['total_bookings'] ?? session['totalBookings'] ?? 0;
 

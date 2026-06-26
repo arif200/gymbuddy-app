@@ -5,9 +5,15 @@ import TrainerSidebar from './components/TrainerSidebar.vue'
 import DashboardSidebar from './components/DashboardSidebar.vue'
 import AdminSidebar from './components/AdminSidebar.vue'
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useAuthStore } from './stores/authStore'
 
 const route = useRoute()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.init()
+})
 
 const isDashboardArea = computed(() => {
   return route.path.startsWith('/dashboard') || route.path.startsWith('/trainer-panel') || route.path.startsWith('/admin')

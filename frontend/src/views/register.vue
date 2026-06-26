@@ -37,7 +37,7 @@
             </div>
 
             <div class="space-y-2">
-              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Email Address</label>
+              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Alamat Email</label>
               <input v-model="formData.email" type="email" autocomplete="email" placeholder="nama@email.com"
                      :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 outline-none transition-all placeholder-gray-700', errors.email ? 'ring-2 ring-red-500' : 'focus:ring-red-500']">
               <p v-if="errors.email" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.email }}</p>
@@ -70,11 +70,18 @@
               <select v-model="formData.role"
                       :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 focus:ring-red-500 outline-none appearance-none cursor-pointer', errors.role ? 'ring-2 ring-red-500' : '']">
                 <option value="" disabled>Pilih peran Anda</option>
-                <option value="customer">Member (Customer)</option>
+                <option value="customer">Member (Pelanggan)</option>
                 <option value="trainer">Trainer (Pelatih)</option>
               </select>
               <p v-if="errors.role" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.role }}</p>
               <span class="absolute right-6 top-[55px] -translate-y-1/2 text-red-500 pointer-events-none text-xs">▼</span>
+            </div>
+
+            <div v-if="formData.role === 'trainer'" class="space-y-2">
+              <label class="text-xs font-semibold text-gray-500 uppercase ml-1">Spesialisasi</label>
+              <input v-model="formData.spesialisasi" type="text" placeholder="Contoh: Strength Training, Yoga, Cardio"
+                     :class="['w-full bg-[#1A1A1A] border-none text-white px-6 py-4 rounded-full focus:ring-2 outline-none transition-all placeholder-gray-700', errors.spesialisasi ? 'ring-2 ring-red-500' : 'focus:ring-red-500']">
+              <p v-if="errors.spesialisasi" class="text-red-400 text-[10px] font-bold ml-2 mt-1">{{ errors.spesialisasi }}</p>
             </div>
 
             <button type="submit" :disabled="loading"
@@ -85,7 +92,7 @@
 
           <p class="mt-8 text-center text-gray-400 text-sm">
             Sudah punya akun? 
-            <router-link to="/login" class="text-blue-400 font-bold hover:underline">Log in di sini</router-link>
+            <router-link to="/login" class="text-blue-400 font-bold hover:underline">Masuk di sini</router-link>
           </p>
         </div>
       </div>
@@ -121,6 +128,7 @@ const formData = ref({
   email: '',
   password: '',
   role: '',
+  spesialisasi: '',
   propinsi: '',
   kota: ''
 })
@@ -130,12 +138,13 @@ const errors = ref({
   email: '',
   password: '',
   role: '',
+  spesialisasi: '',
   propinsi: '',
   kota: ''
 })
 
 const validateForm = () => {
-  const e = { nama: '', email: '', password: '', role: '', propinsi: '', kota: '' }
+  const e = { nama: '', email: '', password: '', role: '', spesialisasi: '', propinsi: '', kota: '' }
   let valid = true
 
   if (!formData.value.nama.trim()) { e.nama = 'Nama lengkap wajib diisi'; valid = false }
@@ -146,6 +155,9 @@ const validateForm = () => {
   if (!formData.value.propinsi.trim()) { e.propinsi = 'Provinsi wajib diisi'; valid = false }
   if (!formData.value.kota.trim()) { e.kota = 'Kota wajib diisi'; valid = false }
   if (!formData.value.role) { e.role = 'Pilih role Anda'; valid = false }
+  if (formData.value.role === 'trainer' && !formData.value.spesialisasi.trim()) {
+    e.spesialisasi = 'Spesialisasi wajib diisi untuk trainer'; valid = false
+  }
 
   errors.value = e
   return valid
@@ -162,18 +174,22 @@ const handleRegister = async () => {
     
     const payload = {
       nama: formData.value.nama,
-      email: formData.value.email,
+      email: formData.value.email.trim().toLowerCase(),
       password: formData.value.password,
       propinsi: formData.value.propinsi,
       kota: formData.value.kota
     }
 
+    if (formData.value.role === 'trainer') {
+      payload.spesialisasi = formData.value.spesialisasi
+    }
+
     await api.post(endpoint, payload)
-    
-    showToast('Pendaftaran Berhasil! Silakan Login.', 'success')
-    setTimeout(() => router.push('/login'), 1500)
+
+    showToast('Pendaftaran berhasil! Kode OTP telah dikirim ke email Anda.', 'success')
+    setTimeout(() => router.push({ path: '/verify-otp', query: { email: payload.email } }), 1500)
   } catch (error) {
-    const msg = error.response?.data?.message || 'Gagal mendaftar. Periksa koneksi.'
+    const msg = error.response?.data?.error?.message || error.response?.data?.message || 'Gagal mendaftar. Periksa koneksi.'
     showToast(msg, 'error')
   } finally {
     loading.value = false

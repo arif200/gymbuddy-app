@@ -29,19 +29,36 @@
 
         <div class="space-y-2 mb-8">
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">📅</span> {{ formatDate(session.start_time) }}
+            <CalendarIcon class="w-3 h-3 text-red-500 opacity-50" /> {{ formatDateTime(session.start_time) }}
           </div>
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">⏰</span> {{ formatTime(session.start_time) }} - {{ formatTime(session.end_time) }}
+            <ClockIcon class="w-3 h-3 text-red-500 opacity-50" /> {{ formatDuration(session.start_time, session.end_time) }}
           </div>
           <div class="flex items-center text-[10px] text-gray-400 gap-2">
-            <span class="text-red-500 opacity-50">📊</span> Status: {{ session.status }}
+            <ActivityIcon class="w-3 h-3 text-red-500 opacity-50" /> Status: {{ session.status }}
+          </div>
+          <div v-if="session.booking_count > 0" class="flex items-center text-[10px] text-amber-400 gap-2">
+            <UsersIcon class="w-3 h-3 text-amber-500 opacity-50" /> {{ session.booking_count }} booking aktif
           </div>
         </div>
 
         <div class="flex gap-2 pt-6 border-t border-gray-800">
           <button @click="openEditModal(session)" class="flex-1 py-3 bg-white/5 border border-gray-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Edit</button>
-          <button v-if="isAdmin" @click="deleteSession(session.id)" class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all">Hapus</button>
+          <button
+            v-if="session.booking_count > 0"
+            @click="showCannotDelete(session)"
+            class="px-4 py-3 bg-amber-500/10 text-amber-500 rounded-xl text-[9px] font-black uppercase border border-amber-500/20 hover:bg-amber-500 hover:text-white transition-all"
+            title="Sesi ini sudah memiliki booking"
+          >
+            Hapus
+          </button>
+          <button
+            v-else
+            @click="deleteSession(session.id)"
+            class="px-4 py-3 bg-red-500/10 text-red-500 rounded-xl text-[9px] font-black uppercase border border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+          >
+            Hapus
+          </button>
         </div>
       </div>
     </div>
@@ -88,7 +105,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { CalendarIcon, ClockIcon, ActivityIcon, UsersIcon } from 'lucide-vue-next'
 import api from '../../utils/api'
 
 const sessions = ref([])
@@ -98,7 +116,6 @@ const showModal = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
 const userData = JSON.parse(localStorage.getItem('user') || '{}')
-const isAdmin = computed(() => userData.role?.toLowerCase() === 'admin')
 
 const form = ref({
   title: '',
@@ -126,11 +143,11 @@ const handleSubmit = async () => {
   try {
     const payload = {
       title: form.value.title,
-      deskripsi: form.value.deskripsi || '',
-      trainer_id: Number(userData.id),
-      start_time: form.value.start_time ? form.value.start_time.replace('T', ' ') + ':00' : null,
-      end_time: form.value.end_time ? form.value.end_time.replace('T', ' ') + ':00' : null,
-      price: Number(form.value.price) || 0
+      description: form.value.deskripsi || '',
+      start_time: form.value.start_time ? new Date(form.value.start_time).toISOString() : null,
+      end_time: form.value.end_time ? new Date(form.value.end_time).toISOString() : null,
+      price: Number(form.value.price) || 0,
+      max_participants: 5
     }
 
     if (isEdit.value) {
@@ -141,20 +158,36 @@ const handleSubmit = async () => {
     showModal.value = false
     await fetchData()
   } catch (err) {
-    alert("Gagal: " + (err.response?.data?.message || "Cek koneksi"))
+    alert("Gagal: " + (err.response?.data?.error?.message || err.response?.data?.message || "Cek koneksi"))
   } finally {
     loadingSubmit.value = false
   }
 }
 
+const showCannotDelete = (session) => {
+  alert(`Sesi "${session.title}" tidak bisa dihapus karena sudah memiliki ${session.booking_count} booking aktif.\n\nSilakan batalkan semua booking terlebih dahulu.`)
+}
+
 const deleteSession = async (id) => {
-  if (!isAdmin.value) return
+  const session = sessions.value.find(s => s.id === id)
+  if (session?.booking_count > 0) {
+    showCannotDelete(session)
+    return
+  }
   if (!confirm('Yakin ingin menghapus sesi ini?')) return
   try {
     await api.delete(`/sessions/${id}`)
     await fetchData()
   } catch (err) {
-    alert("Gagal: " + (err.response?.data?.message || "Hanya Admin yang bisa"))
+    const status = err.response?.status
+    const msg = err.response?.data?.error?.message || err.response?.data?.message || err.message
+    if (status === 409) {
+      alert('Tidak bisa dihapus: ' + msg)
+    } else if (status === 403) {
+      alert('Tidak punya izin: ' + msg)
+    } else {
+      alert('Gagal menghapus: ' + msg)
+    }
   }
 }
 
@@ -163,7 +196,7 @@ const openEditModal = (session) => {
   currentId.value = session.id
   form.value = {
     title: session.title || '',
-    deskripsi: session.deskripsi || '',
+    deskripsi: session.description || session.deskripsi || '',
     start_time: session.start_time ? new Date(session.start_time).toISOString().slice(0, 16) : '',
     end_time: session.end_time ? new Date(session.end_time).toISOString().slice(0, 16) : '',
     price: session.price || 0
@@ -178,8 +211,36 @@ const openCreateModal = () => {
 }
 
 const formatRupiah = (price) => price ? `Rp${Number(price).toLocaleString('id-ID')}` : 'Rp0'
-const formatTime = (d) => d ? new Date(d).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '--'
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', {day:'numeric', month:'short'}) : '--'
+
+const toUTCDate = (d) => {
+  if (!d) return null
+  let str = d.toString().replace(' ', 'T')
+  if (!str.endsWith('Z') && !str.includes('+') && !str.match(/-\d{2}:\d{2}$/)) {
+    str += 'Z'
+  }
+  const date = new Date(str)
+  return isNaN(date.getTime()) ? null : date
+}
+
+const TZ = 'Asia/Jakarta'
+
+// Format waktu lokal (konsisten dengan mobile)
+const formatDateTime = (d) => {
+  const date = toUTCDate(d)
+  if (!date) return '--'
+  return new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZone: TZ
+  }).format(date)
+}
+
+const formatDuration = (start, end) => {
+  const s = toUTCDate(start)
+  const e = toUTCDate(end)
+  if (!s || !e) return '--'
+  const mins = Math.round((e.getTime() - s.getTime()) / 60000)
+  return mins > 0 ? `${mins} menit` : '--'
+}
 
 onMounted(fetchData)
 </script>

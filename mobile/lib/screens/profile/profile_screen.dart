@@ -7,7 +7,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/auth_provider.dart';
 import '../../services/api_service.dart';
 import 'package:intl/intl.dart';
-
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -24,6 +23,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isEditing = false;
   bool _loading = true;
   bool _saving = false;
+  Map<String, dynamic>? _profileData;
 
   @override
   void initState() {
@@ -54,10 +54,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final res = await _api.getUserProfile();
       final user = res['data'] ?? res['user'];
       if (user != null && mounted) {
+        setState(() => _profileData = user);
         _initForm(user);
+        await ref.read(authProvider.notifier).refreshUser();
       }
     } catch (e) {
-      // Use data from auth provider as fallback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat profil: $e'),
+            backgroundColor: Colors.red[700],
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -112,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final theme = Theme.of(context);
-    final user = auth.user;
+    final user = _profileData ?? auth.user;
 
     return Scaffold(
       appBar: AppBar(          leading: IconButton(
@@ -311,8 +320,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ImageProvider? _getProfileImage(Map<String, dynamic>? user) {
     final foto = user?['foto'] as String?;
     if (foto == null || foto.isEmpty) return null;
-    final base = ApiService.baseUrl.replaceAll('/api', '');
-    return CachedNetworkImageProvider('$base/$foto');
+    return CachedNetworkImageProvider('${ApiService.photoBaseUrl}/$foto');
   }
 
   String _getInitials(String? name) {
