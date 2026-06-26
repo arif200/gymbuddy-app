@@ -77,7 +77,7 @@ GoRouter createRouter(WidgetRef ref) {
       GoRoute(
         path: '/reset-password',
         builder: (_, state) => ResetPasswordScreen(
-          token: state.uri.queryParameters['token'],
+          email: state.uri.queryParameters['email'] ?? '',
         ),
       ),
       GoRoute(path: '/find-trainers', builder: (_, _) => const FindTrainersScreen()),

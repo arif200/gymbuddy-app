@@ -158,9 +158,13 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword(String token, String password) async {
+  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password) async {
     try {
-      final res = await _dio.post('/auth/reset-password', data: {'token': token, 'password': password});
+      final res = await _dio.post('/auth/reset-password', data: {
+        'email': email,
+        'otp': otp,
+        'password': password,
+      });
       return res.data;
     } catch (e) {
       return _handleError(e);

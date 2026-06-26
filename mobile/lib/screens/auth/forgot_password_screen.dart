@@ -32,19 +32,29 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     try {
       final api = ApiService();
-      final res = await api.forgotPassword(_emailController.text.trim().toLowerCase());
+      final email = _emailController.text.trim().toLowerCase();
+      final res = await api.forgotPassword(email);
 
-      final token = res['data']?['token'] ?? res['token'];
-      if (token != null) {
+      // Backend mengembalikan {success:true, data:{message, email}} saat sukses
+      if (res['success'] == false) {
         if (!mounted) return;
-        context.go('/reset-password?token=$token');
-      } else {
         setState(() {
-          _errorMsg = res['message'] ?? 'Gagal. Coba lagi.';
+          _errorMsg = res['error']?['message'] ?? res['message'] ?? 'Gagal. Coba lagi.';
           _isLoading = false;
         });
+        return;
       }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Kode OTP telah dikirim ke email Anda!'),
+          backgroundColor: Colors.green[700],
+        ),
+      );
+      context.go('/reset-password?email=$email');
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMsg = 'Gagal terhubung ke server. Coba lagi.';
         _isLoading = false;
