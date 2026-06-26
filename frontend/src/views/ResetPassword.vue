@@ -89,7 +89,7 @@ import api from '../utils/api'
 
 const router = useRouter()
 const route = useRoute()
-const email = ref(route.query.email || '')
+const email = ref((route.query.email || '').toString().trim().toLowerCase())
 const otp = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -131,7 +131,7 @@ const handleResendOtp = async () => {
   resending.value = true
   errorMsg.value = ''
   try {
-    await api.post('/auth/forgot-password', { email: email.value })
+    await api.post('/auth/forgot-password', { email: email.value.trim().toLowerCase() })
     showToast('Kode OTP baru telah dikirim!', 'success')
     startCooldown()
   } catch (err) {

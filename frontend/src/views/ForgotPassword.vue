@@ -68,10 +68,10 @@ const handleSubmit = async () => {
   loading.value = true
   errorMsg.value = ''
   try {
-    await api.post('/auth/forgot-password', { email: email.value })
+    await api.post('/auth/forgot-password', { email: email.value.trim().toLowerCase() })
     showToast('Kode OTP telah dikirim ke email Anda!', 'success')
     setTimeout(() => {
-      router.push({ path: '/reset-password', query: { email: email.value } })
+      router.push({ path: '/reset-password', query: { email: email.value.trim().toLowerCase() } })
     }, 1000)
   } catch (err) {
     errorMsg.value = err.response?.data?.error?.message || err.response?.data?.message || 'Gagal. Coba lagi.'

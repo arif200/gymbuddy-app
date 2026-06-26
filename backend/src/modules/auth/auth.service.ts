@@ -38,8 +38,10 @@ export async function registerCustomer(data: {
     propinsi?: string;
     kota?: string;
 }) {
-    console.log('[REGISTER]', data.email);
-    const existing = await findUserByEmail(data.email);
+    // Normalisasi email ke lowercase agar case-insensitive
+    const email = data.email.trim().toLowerCase();
+    console.log('[REGISTER]', email);
+    const existing = await findUserByEmail(email);
     console.log('[REGISTER] existing user:', existing ? existing.id : null);
     if (existing) {
         throw new AuthError(409, 'CONFLICT', 'Email sudah digunakan');
@@ -48,7 +50,7 @@ export async function registerCustomer(data: {
     const hashed = await bcrypt.hash(data.password, 10);
     const user = await createUser({
         nama: data.nama,
-        email: data.email,
+        email,
         password: hashed,
         role: 'customer',
         jenis_kelamin: data.jenis_kelamin,
@@ -60,11 +62,11 @@ export async function registerCustomer(data: {
 
     // Generate and send OTP
     const otp = generateOtp();
-    otpCache.set(data.email, { otp, userId: user.id, nama: user.nama, attempts: 0 });
-    console.log('[REGISTER] created user id:', user.id, 'email:', data.email, 'otp:', otp);
-    await sendOtpEmail(data.email, otp, user.nama);
+    otpCache.set(email, { otp, userId: user.id, nama: user.nama, attempts: 0 });
+    console.log('[REGISTER] created user id:', user.id, 'email:', email, 'otp:', otp);
+    await sendOtpEmail(email, otp, user.nama);
 
-    return { message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode OTP verifikasi.', email: data.email };
+    return { message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode OTP verifikasi.', email };
 }
 
 export async function registerTrainer(data: {
@@ -77,7 +79,9 @@ export async function registerTrainer(data: {
     propinsi?: string;
     kota?: string;
 }) {
-    const existing = await findUserByEmail(data.email);
+    // Normalisasi email ke lowercase agar case-insensitive
+    const email = data.email.trim().toLowerCase();
+    const existing = await findUserByEmail(email);
     if (existing) {
         throw new AuthError(409, 'CONFLICT', 'Email sudah digunakan');
     }
@@ -85,7 +89,7 @@ export async function registerTrainer(data: {
     const hashed = await bcrypt.hash(data.password, 10);
     const user = await createUser({
         nama: data.nama,
-        email: data.email,
+        email,
         password: hashed,
         role: 'trainer',
         spesialisasi: data.spesialisasi,
@@ -97,14 +101,16 @@ export async function registerTrainer(data: {
 
     // Generate and send OTP
     const otp = generateOtp();
-    otpCache.set(data.email, { otp, userId: user.id, nama: user.nama, attempts: 0 });
-    await sendOtpEmail(data.email, otp, user.nama);
+    otpCache.set(email, { otp, userId: user.id, nama: user.nama, attempts: 0 });
+    await sendOtpEmail(email, otp, user.nama);
 
-    return { message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode OTP verifikasi.', email: data.email };
+    return { message: 'Pendaftaran berhasil. Silakan cek email Anda untuk kode OTP verifikasi.', email };
 }
 
 export async function registerAdmin(data: { nama: string; email: string; password: string }) {
-    const existing = await findUserByEmail(data.email);
+    // Normalisasi email ke lowercase agar case-insensitive
+    const email = data.email.trim().toLowerCase();
+    const existing = await findUserByEmail(email);
     if (existing) {
         throw new AuthError(409, 'CONFLICT', 'Email sudah digunakan');
     }
@@ -112,7 +118,7 @@ export async function registerAdmin(data: { nama: string; email: string; passwor
     const hashed = await bcrypt.hash(data.password, 10);
     const user = await createUser({
         nama: data.nama,
-        email: data.email,
+        email,
         password: hashed,
         role: 'admin',
     });
@@ -122,6 +128,8 @@ export async function registerAdmin(data: { nama: string; email: string; passwor
 }
 
 export async function login(email: string, password: string) {
+    // Normalisasi email ke lowercase agar case-insensitive
+    email = email.trim().toLowerCase();
     console.log('[LOGIN] attempt:', email);
     const user = await findUserByEmail(email);
     console.log('[LOGIN] user found:', user ? user.id : null);
@@ -158,6 +166,8 @@ export async function getMe(userId: number) {
 }
 
 export async function forgotPassword(email: string) {
+    // Normalisasi email ke lowercase agar case-insensitive
+    email = email.trim().toLowerCase();
     const user = await findUserByEmail(email);
     if (!user) {
         throw new AuthError(404, 'NOT_FOUND', 'Email tidak terdaftar');
@@ -172,6 +182,8 @@ export async function forgotPassword(email: string) {
 }
 
 export async function resetPassword(email: string, otp: string, newPassword: string) {
+    // Normalisasi email ke lowercase agar case-insensitive
+    email = email.trim().toLowerCase();
     const stored = resetOtpCache.get<{ otp: string; userId: number; nama: string; attempts: number }>(email);
     if (!stored) {
         throw new AuthError(400, 'OTP_EXPIRED', 'Kode OTP tidak ditemukan atau sudah kedaluwarsa. Silakan minta kode baru.');
@@ -201,6 +213,8 @@ export async function resetPassword(email: string, otp: string, newPassword: str
 }
 
 export async function verifyOtp(email: string, otp: string) {
+    // Normalisasi email ke lowercase agar case-insensitive
+    email = email.trim().toLowerCase();
     console.log('[VERIFY OTP] email:', email, 'otp:', otp);
     const stored = otpCache.get<{ otp: string; userId: number; nama: string; attempts: number }>(email);
     if (!stored) {
@@ -228,6 +242,8 @@ export async function verifyOtp(email: string, otp: string) {
 }
 
 export async function resendOtp(email: string) {
+    // Normalisasi email ke lowercase agar case-insensitive
+    email = email.trim().toLowerCase();
     const user = await findUserByEmail(email);
     if (!user) {
         throw new AuthError(404, 'NOT_FOUND', 'Email tidak terdaftar');

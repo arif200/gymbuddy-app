@@ -16,6 +16,7 @@ class VerifyOtpScreen extends StatefulWidget {
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   final _otpController = TextEditingController();
   final _api = ApiService();
+  late final String _email = widget.email.trim().toLowerCase();
   bool _loading = false;
   bool _resending = false;
   String? _error;
@@ -54,7 +55,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       _error = null;
     });
 
-    final res = await _api.verifyOtp(widget.email, otp);
+    final res = await _api.verifyOtp(_email, otp);
 
     if (!mounted) return;
 
@@ -82,7 +83,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       _error = null;
     });
 
-    final res = await _api.resendOtp(widget.email);
+    final res = await _api.resendOtp(_email);
 
     if (!mounted) return;
 
@@ -142,7 +143,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.email,
+                  _email,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

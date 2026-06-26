@@ -32,7 +32,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     try {
       final api = ApiService();
-      final res = await api.forgotPassword(_emailController.text.trim());
+      final res = await api.forgotPassword(_emailController.text.trim().toLowerCase());
 
       final token = res['data']?['token'] ?? res['token'];
       if (token != null) {

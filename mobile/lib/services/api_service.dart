@@ -12,7 +12,7 @@ class ApiService {
 
   static const String _prodUrl = 'https://api.gymbuddy.site/api/v1';
   static const String _devUrl = 'http://10.0.2.2:5000/api/v1';
-  static const bool _isProduction = false;
+  static const bool _isProduction = true;
 
   static String get baseUrl => _isProduction ? _prodUrl : _devUrl;
   static String get photoBaseUrl => baseUrl.replaceAll('/api/v1', '');

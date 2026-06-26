@@ -107,7 +107,7 @@ const handleLogin = async () => {
   errorMsg.value = ''
   try {
     const response = await api.post('/auth/login', {
-      email: email.value,
+      email: email.value.trim().toLowerCase(),
       password: password.value
     })
 
@@ -135,7 +135,7 @@ const handleLogin = async () => {
     
     if (errCode === 'EMAIL_NOT_VERIFIED') {
       setTimeout(() => {
-        router.push({ path: '/verify-otp', query: { email: email.value } })
+        router.push({ path: '/verify-otp', query: { email: email.value.trim().toLowerCase() } })
       }, 1500)
     }
   } finally {

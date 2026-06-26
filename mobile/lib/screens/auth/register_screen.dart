@@ -36,7 +36,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final data = <String, dynamic>{
       'nama': _namaController.text.trim(),
-      'email': _emailController.text.trim(),
+      'email': _emailController.text.trim().toLowerCase(),
       'password': _passwordController.text,
       'role': _selectedRole,
     };

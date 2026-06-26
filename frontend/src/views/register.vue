@@ -174,7 +174,7 @@ const handleRegister = async () => {
     
     const payload = {
       nama: formData.value.nama,
-      email: formData.value.email,
+      email: formData.value.email.trim().toLowerCase(),
       password: formData.value.password,
       propinsi: formData.value.propinsi,
       kota: formData.value.kota
@@ -185,9 +185,9 @@ const handleRegister = async () => {
     }
 
     await api.post(endpoint, payload)
-    
+
     showToast('Pendaftaran berhasil! Kode OTP telah dikirim ke email Anda.', 'success')
-    setTimeout(() => router.push({ path: '/verify-otp', query: { email: formData.value.email } }), 1500)
+    setTimeout(() => router.push({ path: '/verify-otp', query: { email: payload.email } }), 1500)
   } catch (error) {
     const msg = error.response?.data?.error?.message || error.response?.data?.message || 'Gagal mendaftar. Periksa koneksi.'
     showToast(msg, 'error')
